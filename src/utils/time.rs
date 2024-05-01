@@ -1,13 +1,9 @@
-pub fn format_time(duration: std::time::Duration) -> String {
-    let secs = duration.as_secs();
-    let mins = secs / 60;
-    let hours = mins / 60;
-    let days = hours / 24;
-    format!(
-        "{:02}:{:02}:{:02}:{:02}",
-        days,
-        hours % 24,
-        mins % 60,
-        secs % 60
-    )
+include!("../global/mod.rs");
+use chrono::prelude::*;
+use global::GET_MONTH_FAIL;
+
+pub fn format_now_time() -> String {
+    let now: DateTime<Local> = Local::now();
+    let formatted_datetime: String = now.format("%Y-%m-%d %H:%M:%S").to_string();
+    formatted_datetime
 }

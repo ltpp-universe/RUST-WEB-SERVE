@@ -2,37 +2,40 @@ include!("../config/mod.rs");
 include!("../http/mod.rs");
 include!("../global/mod.rs");
 use config::Config;
+use global::GET_CONFIG_FAIL;
 use request::HttpRequest;
-use std::borrow::Cow;
-use std::fs;
-use std::io::prelude::*;
-use std::net::TcpListener;
-use std::net::TcpStream;
-use std::thread;
+use std::{
+    borrow, fs,
+    io::prelude::{Read, Write},
+    net, thread,
+};
 
 pub struct Base {}
 
 impl Base {
     pub fn run() {
-        let config: Config = Config::load_config();
-        Base::listen(&config);
+        let config: Result<Config, std::io::Error> = Config::load_config();
+        match config {
+            Ok(config) => Base::listen(&config),
+            _ => panic!("{}", GET_CONFIG_FAIL),
+        }
     }
 
     pub fn listen(config: &Config) {
         let host: String = format!("{}:{}", config.listen_ip, config.listen_port);
-        let listener: TcpListener = TcpListener::bind(host).unwrap();
+        let listener: net::TcpListener = net::TcpListener::bind(host).unwrap();
         for stream in listener.incoming() {
-            let stream: TcpStream = stream.unwrap();
+            let stream: net::TcpStream = stream.unwrap();
             thread::spawn(|| {
                 Base::handle_connection(stream);
             });
         }
     }
 
-    pub fn handle_connection(mut stream: TcpStream) {
+    pub fn handle_connection(mut stream: net::TcpStream) {
         let mut buffer: [u8; 1024] = [0; 1024];
         stream.read(&mut buffer).unwrap();
-        let request: Cow<str> = String::from_utf8_lossy(&buffer[..]);
+        let request: borrow::Cow<str> = String::from_utf8_lossy(&buffer[..]);
         let res: Option<HttpRequest> = HttpRequest::parse_http_request(&request);
         let get: &[u8; 16] = b"GET / HTTP/1.1\r\n";
         if buffer.starts_with(get) {

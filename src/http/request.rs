@@ -1,9 +1,13 @@
 include!("../print/mod.rs");
 use print::{println, BLUE, RED};
-use std::collections::HashMap;
-use std::str::{Split, SplitWhitespace};
+use std::{
+    clone,
+    collections::HashMap,
+    fmt,
+    str::{Split, SplitWhitespace},
+};
 
-#[derive(Debug, Clone)]
+#[derive(fmt::Debug, clone::Clone)]
 pub struct HttpRequest {
     pub method: String,
     pub path: String,
