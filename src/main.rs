@@ -1,3 +1,6 @@
+mod base;
+use base::base::Base;
+
 fn main() {
-    println!("Hello, world!");
+    Base::run();
 }
