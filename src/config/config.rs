@@ -1,5 +1,5 @@
 include!("../global/mod.rs");
-use global::CONFIG_PATH;
+use global::{CONFIG_PATH, JSON_DECODE_FAIL};
 use serde::Deserialize;
 use std::fs;
 
@@ -13,7 +13,7 @@ pub struct Config {
 impl Config {
     pub fn load_config() -> Config {
         let json_str: String = fs::read_to_string(CONFIG_PATH).unwrap();
-        let config: Config = serde_json::from_str(&json_str).expect(global::JSON_DECODE_FAIL);
+        let config: Config = serde_json::from_str(&json_str).expect(JSON_DECODE_FAIL);
         println!("Config load Finish:\n{:?}", config);
         config
     }

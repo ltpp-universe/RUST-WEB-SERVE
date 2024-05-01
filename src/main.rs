@@ -1,3 +1,4 @@
+#![allow(warnings)]
 mod base;
 use base::base::Base;
 
