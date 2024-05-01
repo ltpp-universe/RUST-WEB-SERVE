@@ -1,11 +1,9 @@
-include!("../global/mod.rs");
-include!("../utils/mod.rs");
-use global::GET_TIME_FAIL;
+use crate::global::global::GET_TIME_FAIL;
+use crate::utils::time::format_now_time;
 use std::{
     fmt,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
-use time::format_now_time;
 
 pub const GREEN: &'static str = "\x1B[32m"; // 绿色
 pub const RED: &'static str = "\x1B[31m"; // 红色

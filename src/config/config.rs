@@ -1,9 +1,7 @@
-include!("../global/mod.rs");
-include!("../print/mod.rs");
-use global::{
+use crate::global::global::{
     CONFIG_PATH, DEFAULT_BUFFER_SIZE, DEFAULT_LISTEN_IP, DEFAULT_LISTEN_PORT, JSON_DECODE_FAIL,
 };
-use print::{println, GREEN};
+use crate::print::print::{println, GREEN};
 use std::{
     clone, fmt,
     fs::{self, File},
@@ -12,30 +10,46 @@ use std::{
 };
 
 #[derive(serde::Deserialize, serde::Serialize, fmt::Debug, clone::Clone)]
-pub struct Config {
+pub struct Server {
     pub listen_ip: String,
     pub listen_port: usize,
     pub buffer_size: usize,
 }
 
-impl fmt::Display for Config {
+impl fmt::Display for Server {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "listen_ip: {}\nlisten_port: {}\nbuffer_size: {}\n",
+            "listen_ip:{}\nlisten_port:{}\nbuffer_size:{}",
             self.listen_ip, self.listen_port, self.buffer_size
         )
+    }
+}
+
+#[derive(serde::Deserialize, serde::Serialize, fmt::Debug, clone::Clone)]
+pub struct Config {
+    pub server: Vec<Server>,
+}
+
+impl fmt::Display for Config {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut servers_str = String::new();
+        for server in &self.server {
+            servers_str.push_str(&format!("{}\n", server));
+        }
+        write!(f, "Servers:\n{}", servers_str)
     }
 }
 
 impl Config {
     pub fn creat_config() -> io::Result<Config> {
         // 创建文件并写入内容
-        let config: Config = Config {
+        let server: Vec<Server> = vec![Server {
             listen_ip: (*DEFAULT_LISTEN_IP).to_string(),
             listen_port: *DEFAULT_LISTEN_PORT,
             buffer_size: *DEFAULT_BUFFER_SIZE,
-        };
+        }];
+        let config: Config = Config { server };
         let mut file: File = File::create(CONFIG_PATH)?;
         let json_str: String = serde_json::to_string(&config)?;
         file.write_all(json_str.as_bytes())?;

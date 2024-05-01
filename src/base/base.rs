@@ -1,9 +1,7 @@
-include!("../config/mod.rs");
-include!("../http/mod.rs");
-include!("../global/mod.rs");
-use config::Config;
-use global::GET_CONFIG_FAIL;
-use request::HttpRequest;
+use crate::config::config::Config;
+use crate::global::global::GET_CONFIG_FAIL;
+use crate::http::request::HttpRequest;
+
 use std::{
     borrow, fs,
     io::prelude::{Read, Write},
@@ -22,13 +20,23 @@ impl Base {
     }
 
     pub fn listen(config: &Config) {
-        let host: String = format!("{}:{}", config.listen_ip, config.listen_port);
-        let listener: net::TcpListener = net::TcpListener::bind(host).unwrap();
-        for stream in listener.incoming() {
-            let stream: net::TcpStream = stream.unwrap();
-            thread::spawn(|| {
-                Base::handle_connection(stream);
+        let mut handles: Vec<thread::JoinHandle<()>> = vec![];
+        for one_config in &config.server {
+            let host: String = format!("{}:{}", one_config.listen_ip, one_config.listen_port);
+            let listener: net::TcpListener = net::TcpListener::bind(host).unwrap();
+            let handle: thread::JoinHandle<()> = thread::spawn(move || {
+                for stream in listener.incoming() {
+                    let stream: net::TcpStream = stream.unwrap();
+                    thread::spawn(|| {
+                        Base::handle_connection(stream);
+                    });
+                }
             });
+            handles.push(handle);
+        }
+        // 等待所有线程结束
+        for handle in handles {
+            handle.join().unwrap();
         }
     }
 
@@ -37,17 +45,13 @@ impl Base {
         stream.read(&mut buffer).unwrap();
         let request: borrow::Cow<str> = String::from_utf8_lossy(&buffer[..]);
         let res: Option<HttpRequest> = HttpRequest::parse_http_request(&request);
-        let get: &[u8; 16] = b"GET / HTTP/1.1\r\n";
-        if buffer.starts_with(get) {
-            let contents: String = fs::read_to_string("hello.html").unwrap();
-            let response: String = format!(
-                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
-                contents.len(),
-                contents
-            );
-            stream.write(response.as_bytes()).unwrap();
-            stream.flush().unwrap();
-        } else {
-        }
+        let contents: String = fs::read_to_string("hello.html").unwrap();
+        let response: String = format!(
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
+            contents.len(),
+            contents
+        );
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
     }
 }
