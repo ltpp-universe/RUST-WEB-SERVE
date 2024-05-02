@@ -1,7 +1,8 @@
 use crate::global::global::{
-    CONFIG_PATH, DEFAULT_BUFFER_SIZE, DEFAULT_LISTEN_IP, DEFAULT_LISTEN_PORT, JSON_DECODE_FAIL,
+    CONFIG_PATH, DEFAULT_BUFFER_SIZE, DEFAULT_LISTEN_IP, DEFAULT_LISTEN_PORT, DEFAULT_LOG_DIR_PATH,
+    DEFAULT_ROOT_PATH, JSON_DECODE_FAIL,
 };
-use crate::print::print::{println, GREEN};
+use crate::print::print::{self, GREEN};
 use std::{
     clone, fmt,
     fs::{self, File},
@@ -14,6 +15,8 @@ pub struct Server {
     pub listen_ip: String,
     pub listen_port: usize,
     pub buffer_size: usize,
+    pub root_path: String,
+    pub log_dir_path: String,
 }
 
 impl fmt::Display for Server {
@@ -45,9 +48,11 @@ impl Config {
     pub fn creat_config() -> io::Result<Config> {
         // 创建文件并写入内容
         let server: Vec<Server> = vec![Server {
-            listen_ip: (*DEFAULT_LISTEN_IP).to_string(),
+            listen_ip: (*DEFAULT_LISTEN_IP).to_owned(),
             listen_port: *DEFAULT_LISTEN_PORT,
             buffer_size: *DEFAULT_BUFFER_SIZE,
+            root_path: (*DEFAULT_ROOT_PATH).to_owned(),
+            log_dir_path: (*DEFAULT_LOG_DIR_PATH).to_owned(),
         }];
         let config: Config = Config { server };
         let mut file: File = File::create(CONFIG_PATH)?;
@@ -62,7 +67,9 @@ impl Config {
         }
         let json_str: String = fs::read_to_string(CONFIG_PATH).unwrap();
         let config: Config = serde_json::from_str(&json_str).expect(JSON_DECODE_FAIL);
-        println(&config, GREEN);
+        for one_config in &config.server {
+            print::println(&one_config, GREEN, &one_config);
+        }
         Ok(config)
     }
 }
