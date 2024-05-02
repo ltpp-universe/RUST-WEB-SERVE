@@ -31,7 +31,7 @@ deploy-job:      # This job runs in the deploy stage.
   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
   environment: production
   script:
-    - nohup ./rust-web-serve > /dev/null 2>&1 &
+    - nohup rust-web-serve > /dev/null 2>&1 &
     - echo "<html><body>hello</body></html>" >> index.html
     - curl http://0.0.0.0:80/index.html
     - curl http://0.0.0.0:80/404.html
