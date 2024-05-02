@@ -1,8 +1,7 @@
 use crate::config::config::{Config, Server};
-use crate::global::global::{
-    GET_CONFIG_FAIL, NOT_FOUND_HTML, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
-};
+use crate::global::global::{GET_CONFIG_FAIL, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS};
 use crate::http::request::HttpRequest;
+use crate::http::response;
 use crate::print::print::{self, GREEN, RED, YELLOW};
 use crate::utils::file;
 
@@ -87,7 +86,7 @@ impl Base {
             );
         }
         if !load_success {
-            contents = (*NOT_FOUND_HTML).to_owned();
+            contents = response::load_other_html(404, server);
             print::println(
                 &format!("{}:{}", &RESOURCE_LOAD_FAIL, &file_path),
                 &RED,

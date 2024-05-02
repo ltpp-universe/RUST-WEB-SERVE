@@ -16,5 +16,7 @@ pub const GET_CONFIG_FAIL: &'static str = "Failed to get config";
 pub const RESOURCE_LOAD_FAIL: &'static str = "Resource load fail";
 pub const OPEN_LOG_FILE_FAILED: &'static str = "Failed to open log file";
 pub const WRITE_LOG_FILE_FAILED: &'static str = "Failed to write to log file";
+// 错误页
+pub const DEFAULT_ERROR_HTML:&'static str = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>{}</title><style>body{display:flex;justify-content:center}</style></head><body><h1>{}</h1></body></html>";
 // 404
-pub const NOT_FOUND_HTML: &'static str = "<h1>404 Not Found</h1>";
+pub const NOT_FOUND_TEXT: &'static str = "404 Not Found";

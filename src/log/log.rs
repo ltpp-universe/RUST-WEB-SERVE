@@ -7,9 +7,11 @@ use std::{
     fmt,
     fs::{File, OpenOptions},
     io::Write,
-    path,
+    path, sync,
     time::{Duration, SystemTime},
 };
+
+const WRITE_MUTEX: sync::Mutex<()> = sync::Mutex::new(());
 
 /**
  * 无输出写入
@@ -26,7 +28,9 @@ pub fn write_no_print<T: fmt::Display + fmt::Debug>(log_msg: &T, server: &Server
 /**
  * 写入
  */
-pub fn write(log_msg: &String, server: &Server) {
+pub fn write(log_msg: &str, server: &Server) {
+    let write_mutex: sync::Mutex<()> = WRITE_MUTEX;
+    let lock: sync::MutexGuard<()> = write_mutex.lock().unwrap();
     let mut log_dir_path: String = server.log_dir_path.clone();
     if let Some(unix_path_str) = path::PathBuf::from(&log_dir_path).to_str() {
         log_dir_path = unix_path_str.replace("\\", "/");
@@ -42,4 +46,5 @@ pub fn write(log_msg: &String, server: &Server) {
         .open(file_log_path)
         .expect(OPEN_LOG_FILE_FAILED);
     writeln!(file, "{}\n", &log_msg).expect(WRITE_LOG_FILE_FAILED);
+    drop(lock);
 }

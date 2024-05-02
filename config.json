@@ -1,1 +1,11 @@
-{"server":[{"listen_ip":"0.0.0.0","listen_port":80,"buffer_size":1024,"root_path":"./","log_dir_path":"./logs"}]}
+{
+    "server": [
+        {
+            "listen_ip": "0.0.0.0",
+            "listen_port": 80,
+            "buffer_size": 1024,
+            "root_path": "./",
+            "log_dir_path": "./logs"
+        }
+    ]
+}

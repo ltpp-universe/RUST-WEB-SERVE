@@ -1,4 +1,6 @@
 use crate::config::config::Server;
+use crate::global::global::NOT_FOUND_TEXT;
+use crate::template::template;
 use crate::utils::file;
 use std::path;
 
@@ -7,7 +9,7 @@ use std::path;
  */
 pub fn load_other_html(code: usize, server: &Server) -> String {
     let mut html_file_name: String = format!("{}.html", code);
-    let mut html: String = String::from("");
+    let mut html: String = template::get_error_html(NOT_FOUND_TEXT);
     let mut root_path: String = server.root_path.clone();
     if let Some(unix_path_str) = path::PathBuf::from(&root_path).to_str() {
         root_path = unix_path_str.replace("\\", "/");
