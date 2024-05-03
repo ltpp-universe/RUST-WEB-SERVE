@@ -273,3 +273,21 @@ HttpRequest {
 [2024-05-03 20:58:30]
 "Resource load fail:./index.html"
 ```
+
+## 实际效果
+
+### 控制台输出
+
+![alt text](markdown-images/image.png)
+
+![alt text](markdown-images/image-1.png)
+
+### 访问
+
+![alt text](markdown-images/image-2.png)
+
+### 404
+
+![alt text](markdown-images/image-4.png)
+
+![alt text](markdown-images/image-3.png)
