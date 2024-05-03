@@ -4,6 +4,7 @@ use crate::global::global::{
     DEFAULT_SSL_CERTIFICATE_KEY_PATH, DEFAULT_SSL_CERTIFICATE_PATH, JSON_DECODE_FAIL,
 };
 use crate::print::print::{self, GREEN};
+use std::collections::HashMap;
 use std::{
     clone, fmt,
     fs::{self, File},
@@ -13,12 +14,8 @@ use std::{
 
 #[derive(serde::Deserialize, serde::Serialize, fmt::Debug, clone::Clone)]
 pub struct Server {
-    pub listen_ip: String,
-    pub listen_port: usize,
-    pub buffer_size: usize,
     pub root_path: String,
     pub log_dir_path: String,
-    pub server_name: String,
     pub ssl_certificate_path: String,
     pub ssl_certificate_key_path: String,
     pub empty_path_try_files_path: String,
@@ -28,15 +25,37 @@ impl fmt::Display for Server {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "listen_ip:{}\nlisten_port:{}\nbuffer_size:{}",
-            self.listen_ip, self.listen_port, self.buffer_size
+            "root_path:{}\nlog_dir_path:{}\nssl_certificate_path:{}\nssl_certificate_key_path:{}\nempty_path_try_files_path:{}",
+             self.root_path, self.log_dir_path,self.ssl_certificate_path,self.ssl_certificate_key_path,self.empty_path_try_files_path
+        )
+    }
+}
+
+#[derive(serde::Deserialize, serde::Serialize, fmt::Debug, clone::Clone)]
+pub struct ServerNameBind {
+    pub listen_ip: String,
+    pub listen_port: usize,
+    pub buffer_size: usize,
+    pub bind_server_name: HashMap<String, Server>,
+}
+
+impl fmt::Display for ServerNameBind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut bind_server_name: String = String::new();
+        for (key, value) in &self.bind_server_name {
+            bind_server_name.push_str(&format!("{}:{}\n", key, value));
+        }
+        write!(
+            f,
+            "listen_ip:{}\nlisten_port:{}\nbind_server_name:{}",
+            self.listen_ip, self.listen_port, bind_server_name
         )
     }
 }
 
 #[derive(serde::Deserialize, serde::Serialize, fmt::Debug, clone::Clone)]
 pub struct Config {
-    pub server: Vec<Server>,
+    pub server: Vec<ServerNameBind>,
 }
 
 impl fmt::Display for Config {
@@ -50,20 +69,44 @@ impl fmt::Display for Config {
 }
 
 impl Config {
-    pub fn creat_config() -> io::Result<Config> {
-        // 创建文件并写入内容
-        let server: Vec<Server> = vec![Server {
-            listen_ip: (*DEFAULT_LISTEN_IP).to_owned(),
-            listen_port: *DEFAULT_LISTEN_PORT,
-            buffer_size: *DEFAULT_BUFFER_SIZE,
+    /**
+     * 获取默认Server
+     */
+    pub fn get_default_server() -> Server {
+        Server {
             root_path: (*DEFAULT_ROOT_PATH).to_owned(),
             log_dir_path: (*DEFAULT_LOG_DIR_PATH).to_owned(),
             ssl_certificate_path: (*DEFAULT_SSL_CERTIFICATE_PATH).to_owned(),
             ssl_certificate_key_path: (*DEFAULT_SSL_CERTIFICATE_KEY_PATH).to_owned(),
-            server_name: (*DEFAULT_SERVER_NAME).to_owned(),
             empty_path_try_files_path: (*DEFAULT_EMPTY_PATH_TRY_FILES_PATH).to_owned(),
-        }];
-        let config: Config = Config { server };
+        }
+    }
+    /**
+     * 获取默认ServerNameBind
+     */
+    pub fn get_default_server_name_bind() -> ServerNameBind {
+        let mut server_name_map: HashMap<String, Server> = HashMap::new();
+        server_name_map.insert(
+            (*DEFAULT_SERVER_NAME).to_owned(),
+            Config::get_default_server(),
+        );
+        ServerNameBind {
+            listen_ip: (*DEFAULT_LISTEN_IP).to_owned(),
+            listen_port: *DEFAULT_LISTEN_PORT,
+            buffer_size: *DEFAULT_BUFFER_SIZE,
+            bind_server_name: server_name_map,
+        }
+    }
+    /**
+     * 创建配置
+     */
+    pub fn creat_config() -> io::Result<Config> {
+        // 创建文件并写入内容
+        let server: Server = Config::get_default_server();
+        let server_name_bind = Config::get_default_server_name_bind();
+        let config: Config = Config {
+            server: vec![server_name_bind],
+        };
         let mut file: File = File::create(CONFIG_PATH)?;
         let json_str: String = serde_json::to_string(&config)?;
         file.write_all(json_str.as_bytes())?;
@@ -77,7 +120,9 @@ impl Config {
         let json_str: String = fs::read_to_string(CONFIG_PATH).unwrap();
         let config: Config = serde_json::from_str(&json_str).expect(JSON_DECODE_FAIL);
         for one_config in &config.server {
-            print::println(&one_config, GREEN, &one_config);
+            for (one_server_key, one_server_value) in &one_config.bind_server_name {
+                print::println(&one_config, GREEN, &one_server_value);
+            }
         }
         Ok(config)
     }

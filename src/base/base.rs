@@ -3,20 +3,27 @@ use crate::global::global::{
     GET_CONFIG_FAIL, NOT_FOUND_TEXT, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
 };
 use crate::http::body::REFERER;
+use crate::http::header::HOST;
 use crate::http::request::HttpRequest;
 use crate::http::response;
 use crate::print::print::{self, GREEN, RED, YELLOW};
 use crate::utils::file;
 
+use std::collections::{HashMap, HashSet};
 use std::{
     borrow, fs,
     io::prelude::{Read, Write},
-    net, path, str, thread,
+    net, path, str,
+    sync::{Arc, Mutex},
+    thread,
 };
 
 pub struct Base {}
 
 impl Base {
+    /**
+     * 运行
+     */
     pub fn run() {
         let config: Result<Config, std::io::Error> = Config::load_config();
         match config {
@@ -25,27 +32,83 @@ impl Base {
         }
     }
 
+    /**
+     * 监听
+     */
     pub fn listen(config: &Config) {
         let mut handles: Vec<thread::JoinHandle<()>> = vec![];
+        let mut port_server_list: HashMap<usize, HashMap<String, Server>> = HashMap::new();
+        let mut port_map_listener: HashMap<usize, Arc<Mutex<net::TcpListener>>> = HashMap::new();
+        // 配置整合
         for one_config in &config.server {
-            let host: String = format!("{}:{}", one_config.listen_ip, one_config.listen_port);
-            print::println(
-                &format!("http://{}:{}", one_config.listen_ip, one_config.listen_port),
-                &YELLOW,
-                &one_config,
-            );
-            let listener: net::TcpListener = net::TcpListener::bind(host).unwrap();
-            let clone_one_config: Server = one_config.clone();
-            let handle: thread::JoinHandle<()> = thread::spawn(move || {
-                for stream in listener.incoming() {
-                    let stream: net::TcpStream = stream.unwrap();
-                    let copy_one_config: Server = clone_one_config.clone();
-                    thread::spawn(move || {
-                        Base::handle_connection(stream, &copy_one_config);
-                    });
+            for (one_server_key, one_server_value) in &one_config.bind_server_name {
+                match port_server_list.get_mut(&one_config.listen_port) {
+                    Some(http_server) => match http_server.get(one_server_key) {
+                        Some(mut tem_http_server) => {
+                            tem_http_server = &mut one_server_value.clone();
+                        }
+                        None => {
+                            http_server.insert(one_server_key.clone(), one_server_value.clone());
+                        }
+                    },
+                    None => {
+                        let mut tem_hash: HashMap<String, Server> = HashMap::new();
+                        tem_hash.insert(one_server_key.clone(), one_server_value.clone());
+                        port_server_list.insert(one_config.listen_port, tem_hash);
+                    }
                 }
-            });
-            handles.push(handle);
+            }
+        }
+        for one_config in &config.server {
+            let port: usize = one_config.listen_port;
+            let buffer_size: usize = one_config.buffer_size;
+            for (one_server_key, one_server_value) in &one_config.bind_server_name {
+                match port_map_listener.get(&port) {
+                    Some(has_use_port) => {
+                        continue;
+                    }
+                    _ => {}
+                }
+                let host: String = format!("{}:{}", one_config.listen_ip, port);
+                let listener: net::TcpListener = net::TcpListener::bind(host).unwrap();
+                let listener_arc: Arc<Mutex<net::TcpListener>> = Arc::new(Mutex::new(listener));
+                port_map_listener.insert(port, Arc::clone(&listener_arc));
+                print::println(
+                    &format!("http://{}:{}", one_config.listen_ip, port),
+                    &YELLOW,
+                    &one_server_value,
+                );
+                let listener_clone: Arc<Mutex<net::TcpListener>> = Arc::clone(&listener_arc);
+                let one_config_clone: Server = one_server_value.clone();
+                let port_map_listener_clone: HashMap<usize, Arc<Mutex<net::TcpListener>>> =
+                    port_map_listener.clone();
+                // K->域名 | V->Server
+                let server_map_list: HashMap<String, Server> = match port_server_list.get(&port) {
+                    Some(tem_server_list) => tem_server_list.clone(),
+                    _ => HashMap::new(),
+                };
+                let handle: thread::JoinHandle<()> = thread::spawn(move || {
+                    use std::sync::MutexGuard;
+                    let mut listener: MutexGuard<net::TcpListener> = listener_clone.lock().unwrap();
+                    for stream in listener.incoming() {
+                        let stream: net::TcpStream = stream.unwrap();
+                        let copy_one_config: Server = one_config_clone.clone();
+                        let port_map_listener_clone: HashMap<usize, Arc<Mutex<net::TcpListener>>> =
+                            port_map_listener_clone.clone();
+                        let server_map_list_clone: HashMap<String, Server> =
+                            server_map_list.clone();
+                        thread::spawn(move || {
+                            Base::handle_connection(
+                                stream,
+                                port,
+                                buffer_size,
+                                server_map_list_clone,
+                            );
+                        });
+                    }
+                });
+                handles.push(handle);
+            }
         }
         // 等待所有线程结束
         for handle in handles {
@@ -77,30 +140,57 @@ impl Base {
         format!("{}/{}", root_path, tem_request_path)
     }
 
-    pub fn handle_connection(mut stream: net::TcpStream, server: &Server) {
-        let mut buffer: Vec<u8> = vec![0; server.buffer_size];
+    /**
+     * 处理请求
+     */
+    pub fn handle_connection(
+        mut stream: net::TcpStream,
+        port: usize,
+        buffer_size: usize,
+        server_map: HashMap<String, Server>,
+    ) {
+        // 是否找到请求来源域名对应配置，只允许绑定的域名访问
+        let mut has_find_server: bool = false;
+        let mut server: &Server = &Config::get_default_server();
+        let mut buffer: Vec<u8> = vec![0; buffer_size];
         stream.read(&mut buffer).unwrap();
         let request: borrow::Cow<str> = String::from_utf8_lossy(&buffer[..]);
         let res: Option<HttpRequest> = HttpRequest::parse_http_request(&request, server);
         let mut request_path: String = String::new();
+        let mut request_host: String = String::new();
         if let Some(http_request) = &res {
             request_path = http_request.path.to_owned();
+            match http_request.headers.get(HOST) {
+                Some(http_host) => {
+                    request_host = http_host.to_owned();
+                }
+                _ => {}
+            };
+        }
+        match server_map.get(&request_host) {
+            Some(tem_server) => {
+                server = tem_server;
+                has_find_server = true;
+            }
+            _ => {}
         }
         let file_path: String = Base::get_full_file_path(server, &request_path);
         let mut contents: Vec<u8> = vec![];
         let mut load_success: bool = false;
         let mut res_response: Vec<u8> = vec![];
-        if let Some(html_res) = file::get_file_data(&file_path, server) {
-            load_success = true;
-            contents = html_res;
-            print::println(
-                &format!("{}:{}", &RESOURCE_LOAD_SUCCESS, &file_path),
-                &GREEN,
-                server,
-            );
-            res_response = response::response(200, &contents, server);
+        if has_find_server {
+            if let Some(html_res) = file::get_file_data(&file_path, server) {
+                load_success = true;
+                contents = html_res;
+                print::println(
+                    &format!("{}:{}", &RESOURCE_LOAD_SUCCESS, &file_path),
+                    &GREEN,
+                    server,
+                );
+                res_response = response::response(200, &contents, server);
+            }
         }
-        if !load_success {
+        if !load_success || !has_find_server {
             let (contents, code) = response::load_other_html(404, server);
             print::println(
                 &format!("{}:{}", &RESOURCE_LOAD_FAIL, &file_path),
