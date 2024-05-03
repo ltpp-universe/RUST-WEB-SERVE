@@ -5,6 +5,13 @@
             "listen_port": 80,
             "buffer_size": 1024,
             "bind_server_name": {
+                "127.0.0.1": {
+                    "root_path": "./",
+                    "log_dir_path": "./logs",
+                    "ssl_certificate_path": "./ssl/certificate.crt",
+                    "ssl_certificate_key_path": "./ssl/certificate.key",
+                    "empty_path_try_files_path": "./index.html"
+                },
                 "localhost": {
                     "root_path": "./",
                     "log_dir_path": "./logs",
@@ -13,13 +20,6 @@
                     "empty_path_try_files_path": "./index.html"
                 },
                 "test.com": {
-                    "root_path": "./",
-                    "log_dir_path": "./logs",
-                    "ssl_certificate_path": "./ssl/certificate.crt",
-                    "ssl_certificate_key_path": "./ssl/certificate.key",
-                    "empty_path_try_files_path": "./index.html"
-                },
-                "127.0.0.1": {
                     "root_path": "./",
                     "log_dir_path": "./logs",
                     "ssl_certificate_path": "./ssl/certificate.crt",

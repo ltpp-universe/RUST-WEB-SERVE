@@ -6,7 +6,7 @@ pub const DEFAULT_ROOT_PATH: &'static str = &"./";
 pub const DEFAULT_LOG_DIR_PATH: &'static str = &"./logs";
 pub const DEFAULT_SSL_CERTIFICATE_PATH: &'static str = &"./ssl/certificate.crt";
 pub const DEFAULT_SSL_CERTIFICATE_KEY_PATH: &'static str = &"./ssl/certificate.key";
-pub const DEFAULT_SERVER_NAME: &'static str = &"localhost";
+pub const DEFAULT_SERVER_NAME: &'static str = DEFAULT_LISTEN_IP;
 pub const DEFAULT_EMPTY_PATH_TRY_FILES_PATH: &'static str = &"./index.html";
 // 成功
 pub const RESOURCE_LOAD_SUCCESS: &'static str = "Resource load success";
