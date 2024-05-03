@@ -94,6 +94,7 @@
 > PS:listen_ip为服务端IP, bind_server_name下的key为域名或者IP, 一般listen_ip为127.0.0.1，
 > 如果bind_server_name配置了localhost域名，那么可以使用localhost访问，
 > 但是不支持127.0.0.1，如需支持127.0.0.1，在bind_server_name中添加即可
+> 如果本地做了映射，需要同时添加映射的域名和127.0.0.1
 > 配置如下：
 
 ```json
@@ -106,6 +107,13 @@
         "empty_path_try_files_path": "./index.html"
     },
     "127.0.0.1": {
+        "root_path": "./",
+        "log_dir_path": "./logs",
+        "ssl_certificate_path": "./ssl/certificate.crt",
+        "ssl_certificate_key_path": "./ssl/certificate.key",
+        "empty_path_try_files_path": "./index.html"
+    },
+    "test.com": {
         "root_path": "./",
         "log_dir_path": "./logs",
         "ssl_certificate_path": "./ssl/certificate.crt",
@@ -291,3 +299,7 @@ HttpRequest {
 ![alt text](markdown-images/image-4.png)
 
 ![alt text](markdown-images/image-3.png)
+
+### 域名绑定
+
+![alt text](markdown-images/image-5.png)
