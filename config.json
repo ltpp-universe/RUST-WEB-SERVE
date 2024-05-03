@@ -1,11 +1,26 @@
 {
     "server": [
         {
-            "listen_ip": "0.0.0.0",
+            "listen_ip": "127.0.0.1",
             "listen_port": 80,
             "buffer_size": 1024,
             "root_path": "./",
-            "log_dir_path": "./logs"
+            "log_dir_path": "./logs",
+            "server_name": "localhost",
+            "ssl_certificate_path": "./ssl/certificate.crt",
+            "ssl_certificate_key_path": "./ssl/certificate.key",
+            "empty_path_try_files_path": "./index.html"
+        },
+        {
+            "listen_ip": "127.0.0.1",
+            "listen_port": 81,
+            "buffer_size": 1024,
+            "root_path": "./",
+            "log_dir_path": "./logs",
+            "server_name": "localhost",
+            "ssl_certificate_path": "./ssl/certificate.crt",
+            "ssl_certificate_key_path": "./ssl/certificate.key",
+            "empty_path_try_files_path": "./index.html"
         }
     ]
 }

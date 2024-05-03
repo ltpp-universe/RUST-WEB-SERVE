@@ -61,7 +61,6 @@ impl HttpRequest {
                 }
             }
             let path: String = HttpRequest::get_path_from_request_path(&full_path);
-            print::println(&path, &BLUE, server);
             let res_request: HttpRequest = HttpRequest {
                 method,
                 path,
@@ -122,7 +121,7 @@ impl HttpRequest {
             let domain: &str = &url[pos_domain_start..*pos_domain_end];
             domain.to_owned()
         } else {
-            String::from("")
+            String::new()
         }
     }
 
@@ -156,7 +155,7 @@ impl HttpRequest {
             let path: &str = &url[*pos_domain_end..*pos_path_end];
             path.to_owned()
         } else {
-            String::from("")
+            String::new()
         }
     }
 

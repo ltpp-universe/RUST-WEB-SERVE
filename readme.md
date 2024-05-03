@@ -37,12 +37,29 @@
 {
     "server": [
         {
-            "listen_ip": "0.0.0.0", // 监听的IP
-            "listen_port": 80, // 监听的数组
-            "buffer_size": 1024, // buffer大小
-            "root_path": "./", // 资源目录
-            "log_dir_path": "./logs" // 日志目录
+            "listen_ip": "127.0.0.1",
+            "listen_port": 80,
+            "buffer_size": 1024,
+            "root_path": "./",
+            "log_dir_path": "./logs",
+            "server_name": "localhost",
+            "ssl_certificate_path": "./ssl/certificate.crt",
+            "ssl_certificate_key_path": "./ssl/certificate.key",
+            "empty_path_try_files_path": "./index.html"
+        },
+        {
+            "listen_ip": "127.0.0.1",
+            "listen_port": 81,
+            "buffer_size": 1024,
+            "root_path": "./",
+            "log_dir_path": "./logs",
+            "server_name": "localhost",
+            "ssl_certificate_path": "./ssl/certificate.crt",
+            "ssl_certificate_key_path": "./ssl/certificate.key",
+            "empty_path_try_files_path": "./index.html"
         }
     ]
 }
 ```
+
+> 以上配置将当前目录作为访问地址的根目录，监听了80和81端口用来处理请求，当访问为空则重写路径到当前目录的index.html（适用于Vue等打包后的资源），日志保存在当前目录logs下

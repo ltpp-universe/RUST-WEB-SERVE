@@ -18,8 +18,8 @@ const END: &'static str = "\x1B[0m"; // 结束
 const PRINTLN_MUTEX: sync::Mutex<()> = sync::Mutex::new(());
 
 fn base_print<T: fmt::Display + fmt::Debug>(str: &T, color: &str, server: &Server, has_br: bool) {
-    let mut print_msg: String = String::from("");
-    let mut log_msg: String = String::from("");
+    let mut print_msg: String = String::new();
+    let mut log_msg: String = String::new();
     let now: Duration = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect(GET_TIME_FAIL);

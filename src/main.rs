@@ -5,6 +5,7 @@ mod global;
 mod http;
 mod log;
 mod print;
+mod ssl;
 mod template;
 mod utils;
 use base::base::Base;
