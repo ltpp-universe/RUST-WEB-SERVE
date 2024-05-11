@@ -1,3 +1,5 @@
+// APP名称
+pub const APP_NAME: &'static str = "RUST-WEB-SERVER";
 // 配置
 pub const DEFAULT_LISTEN_IP: &'static str = &"127.0.0.1";
 pub const DEFAULT_LISTEN_PORT: &'static usize = &80;

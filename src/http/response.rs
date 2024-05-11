@@ -1,10 +1,10 @@
 use crate::config::config::{Config, Server};
 use crate::global::global::{
-    ACCEPTED_TEXT, BAD_GATEWAY_TEXT, BAD_REQUEST_TEXT, CONTINUE_TEXT, CREATED_TEXT, FORBIDDEN_TEXT,
-    FOUND_TEXT, INTERNAL_SERVER_ERROR_TEXT, METHOD_NOT_ALLOWED_TEXT, MOVED_PERMANENTLY_TEXT,
-    NOT_FOUND_TEXT, NOT_IMPLEMENTED_TEXT, NOT_MODIFIED_TEXT, NO_CONTENT_TEXT, OK_TEXT,
-    REQUEST_TIMEOUT_TEXT, SERVICE_UNAVAILABLE_TEXT, SWITCHING_PROTOCOLS_TEXT, UNAUTHORIZED_TEXT,
-    UNKNOWN_STATUS_CODE,
+    ACCEPTED_TEXT, APP_NAME, BAD_GATEWAY_TEXT, BAD_REQUEST_TEXT, CONTINUE_TEXT, CREATED_TEXT,
+    FORBIDDEN_TEXT, FOUND_TEXT, INTERNAL_SERVER_ERROR_TEXT, METHOD_NOT_ALLOWED_TEXT,
+    MOVED_PERMANENTLY_TEXT, NOT_FOUND_TEXT, NOT_IMPLEMENTED_TEXT, NOT_MODIFIED_TEXT,
+    NO_CONTENT_TEXT, OK_TEXT, REQUEST_TIMEOUT_TEXT, SERVICE_UNAVAILABLE_TEXT,
+    SWITCHING_PROTOCOLS_TEXT, UNAUTHORIZED_TEXT, UNKNOWN_STATUS_CODE,
 };
 use crate::ssl::ssl;
 use crate::template::template;
@@ -76,11 +76,12 @@ pub fn get_code_msg(code: usize) -> String {
 pub fn response(code: usize, content: &Vec<u8>, server: &Server) -> Vec<u8> {
     let mut res_response: Vec<u8> = vec![];
     let (ssl_certificate, ssl_certificate_key) = ssl::get_ssl(server);
-    let () = res_response = format!(
-        "HTTP/1.1 {} {}\r\nContent-Length: {}\r\n\r\n",
+    res_response = format!(
+        "HTTP/1.1 {} {}\r\nContent-Length: {}\r\nServer: {}\r\n\r\n",
         code,
         get_code_msg(code),
         content.len(),
+        APP_NAME
     )
     .into_bytes();
     res_response.extend(content);
