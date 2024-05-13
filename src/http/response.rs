@@ -77,11 +77,11 @@ pub fn response(code: usize, content: &Vec<u8>, server: &Server) -> Vec<u8> {
     let mut res_response: Vec<u8> = vec![];
     let (ssl_certificate, ssl_certificate_key) = ssl::get_ssl(server);
     res_response = format!(
-        "HTTP/1.1 {} {}\r\nContent-Length: {}\r\nServer: {}\r\n\r\n",
+        "HTTP/1.1 {} {}\r\nContent-Length: {}\r\n{}\r\n\r\n",
         code,
         get_code_msg(code),
         content.len(),
-        APP_NAME
+        server.response_header
     )
     .into_bytes();
     res_response.extend(content);

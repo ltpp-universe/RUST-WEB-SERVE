@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 // APP名称
 pub const APP_NAME: &'static str = "RUST-WEB-SERVER";
 // 配置
@@ -10,6 +12,7 @@ pub const DEFAULT_SSL_CERTIFICATE_PATH: &'static str = &"./ssl/certificate.crt";
 pub const DEFAULT_SSL_CERTIFICATE_KEY_PATH: &'static str = &"./ssl/certificate.key";
 pub const DEFAULT_SERVER_NAME: &'static str = DEFAULT_LISTEN_IP;
 pub const DEFAULT_EMPTY_PATH_TRY_FILES_PATH: &'static str = &"./index.html";
+pub const DEFAULT_RESPONSE_HEADER: &'static str = &"Server: RUST-WEB-SERVER";
 // 成功
 pub const RESOURCE_LOAD_SUCCESS: &'static str = "Resource load success";
 pub const CONFIG_PATH: &'static str = "config.json";

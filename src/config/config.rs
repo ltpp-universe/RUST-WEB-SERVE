@@ -1,7 +1,8 @@
 use crate::global::global::{
     CONFIG_PATH, DEFAULT_BUFFER_SIZE, DEFAULT_EMPTY_PATH_TRY_FILES_PATH, DEFAULT_LISTEN_IP,
-    DEFAULT_LISTEN_PORT, DEFAULT_LOG_DIR_PATH, DEFAULT_ROOT_PATH, DEFAULT_SERVER_NAME,
-    DEFAULT_SSL_CERTIFICATE_KEY_PATH, DEFAULT_SSL_CERTIFICATE_PATH, JSON_DECODE_FAIL,
+    DEFAULT_LISTEN_PORT, DEFAULT_LOG_DIR_PATH, DEFAULT_RESPONSE_HEADER, DEFAULT_ROOT_PATH,
+    DEFAULT_SERVER_NAME, DEFAULT_SSL_CERTIFICATE_KEY_PATH, DEFAULT_SSL_CERTIFICATE_PATH,
+    JSON_DECODE_FAIL,
 };
 use crate::print::print::{self, GREEN};
 use std::collections::HashMap;
@@ -19,6 +20,7 @@ pub struct Server {
     pub ssl_certificate_path: String,
     pub ssl_certificate_key_path: String,
     pub empty_path_try_files_path: String,
+    pub response_header: String,
 }
 
 impl fmt::Display for Server {
@@ -79,8 +81,10 @@ impl Config {
             ssl_certificate_path: (*DEFAULT_SSL_CERTIFICATE_PATH).to_owned(),
             ssl_certificate_key_path: (*DEFAULT_SSL_CERTIFICATE_KEY_PATH).to_owned(),
             empty_path_try_files_path: (*DEFAULT_EMPTY_PATH_TRY_FILES_PATH).to_owned(),
+            response_header: (*DEFAULT_RESPONSE_HEADER).to_owned(),
         }
     }
+
     /**
      * 获取默认ServerNameBind
      */
@@ -97,6 +101,7 @@ impl Config {
             bind_server_name: server_name_map,
         }
     }
+
     /**
      * 创建配置
      */
@@ -113,6 +118,9 @@ impl Config {
         Ok(config)
     }
 
+    /**
+     * 加载配置
+     */
     pub fn load_config() -> io::Result<Config> {
         if !File::open(CONFIG_PATH).is_ok() {
             Config::creat_config();
