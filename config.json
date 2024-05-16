@@ -11,7 +11,30 @@
                     "ssl_certificate_path": "./ssl/certificate.crt",
                     "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
-                    "response_header": "Server: RUST-WEB-SERVER"
+                    "response_header": "Server: RUST-WEB-SERVER\r\nPath:./"
+                },
+                "localhost": {
+                    "root_path": "./",
+                    "log_dir_path": "./logs",
+                    "ssl_certificate_path": "./ssl/certificate.crt",
+                    "ssl_certificate_key_path": "./ssl/certificate.key",
+                    "empty_path_try_files_path": "./index.html",
+                    "response_header": "Server: RUST-WEB-SERVER\r\nPath:./"
+                }
+            }
+        },
+        {
+            "listen_ip": "127.0.0.1",
+            "listen_port": 81,
+            "buffer_size": 1024,
+            "bind_server_name": {
+                "127.0.0.1": {
+                    "root_path": "./",
+                    "log_dir_path": "./logs",
+                    "ssl_certificate_path": "./ssl/certificate.crt",
+                    "ssl_certificate_key_path": "./ssl/certificate.key",
+                    "empty_path_try_files_path": "./index.html",
+                    "response_header": "Server: RUST-WEB-SERVER\r\nPath:./"
                 }
             }
         }
