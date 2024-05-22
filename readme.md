@@ -47,40 +47,36 @@
             "listen_port": 80,
             "buffer_size": 1024,
             "bind_server_name": {
+                "127.0.0.1": {
+                    "root_path": "./",
+                    "log_dir_path": "./logs",
+                    "ssl_certificate_path": "./ssl/certificate.crt",
+                    "ssl_certificate_key_path": "./ssl/certificate.key",
+                    "empty_path_try_files_path": "./index.html",
+                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git"
+                },
                 "localhost": {
                     "root_path": "./",
                     "log_dir_path": "./logs",
                     "ssl_certificate_path": "./ssl/certificate.crt",
                     "ssl_certificate_key_path": "./ssl/certificate.key",
-                    "empty_path_try_files_path": "./index.html"
-                },
-                "test.ltpp.vip": {
-                    "root_path": "./",
-                    "log_dir_path": "./logs",
-                    "ssl_certificate_path": "./ssl/certificate.crt",
-                    "ssl_certificate_key_path": "./ssl/certificate.key",
-                    "empty_path_try_files_path": "./index.html"
+                    "empty_path_try_files_path": "./index.html",
+                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git"
                 }
             }
         },
         {
-            "listen_ip": "192.168.128.1",
+            "listen_ip": "127.0.0.1",
             "listen_port": 81,
             "buffer_size": 1024,
             "bind_server_name": {
-                "localhost": {
+                "127.0.0.1": {
                     "root_path": "./",
                     "log_dir_path": "./logs",
                     "ssl_certificate_path": "./ssl/certificate.crt",
                     "ssl_certificate_key_path": "./ssl/certificate.key",
-                    "empty_path_try_files_path": "./index.html"
-                },
-                "test.ltpp.vip": {
-                    "root_path": "./",
-                    "log_dir_path": "./logs",
-                    "ssl_certificate_path": "./ssl/certificate.crt",
-                    "ssl_certificate_key_path": "./ssl/certificate.key",
-                    "empty_path_try_files_path": "./index.html"
+                    "empty_path_try_files_path": "./index.html",
+                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git"
                 }
             }
         }
@@ -106,21 +102,24 @@
         "log_dir_path": "./logs",
         "ssl_certificate_path": "./ssl/certificate.crt",
         "ssl_certificate_key_path": "./ssl/certificate.key",
-        "empty_path_try_files_path": "./index.html"
+        "empty_path_try_files_path": "./index.html",
+        "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git"
     },
     "127.0.0.1": {
         "root_path": "./",
         "log_dir_path": "./logs",
         "ssl_certificate_path": "./ssl/certificate.crt",
         "ssl_certificate_key_path": "./ssl/certificate.key",
-        "empty_path_try_files_path": "./index.html"
+        "empty_path_try_files_path": "./index.html",
+        "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git"
     },
     "test.com": {
         "root_path": "./",
         "log_dir_path": "./logs",
         "ssl_certificate_path": "./ssl/certificate.crt",
         "ssl_certificate_key_path": "./ssl/certificate.key",
-        "empty_path_try_files_path": "./index.html"
+        "empty_path_try_files_path": "./index.html",
+        "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git"
     }
 }
 ```
@@ -130,178 +129,81 @@
 > 支持配置，日期和完整请求记录
 
 ```php
-[2024-05-03 20:58:28]
-ServerNameBind {
-
-    listen_ip: "127.0.0.1",
-    listen_port: 80,
-    buffer_size: 1024,
-    bind_server_name: {
-        "localhost": Server {
-            root_path: "./",
-            log_dir_path: "./logs",
-            ssl_certificate_path: "./ssl/certificate.crt",
-            ssl_certificate_key_path: "./ssl/certificate.key",
-            empty_path_try_files_path: "./index.html",
-        },
-        "127.0.0.1": Server {
-            root_path: "./",
-            log_dir_path: "./logs",
-            ssl_certificate_path: "./ssl/certificate.crt",
-            ssl_certificate_key_path: "./ssl/certificate.key",
-            empty_path_try_files_path: "./index.html",
-        },
-    },
-
-}
-
-[2024-05-03 20:58:28]
-ServerNameBind {
-
-    listen_ip: "127.0.0.1",
-    listen_port: 80,
-    buffer_size: 1024,
-    bind_server_name: {
-        "localhost": Server {
-            root_path: "./",
-            log_dir_path: "./logs",
-            ssl_certificate_path: "./ssl/certificate.crt",
-            ssl_certificate_key_path: "./ssl/certificate.key",
-            empty_path_try_files_path: "./index.html",
-        },
-        "127.0.0.1": Server {
-            root_path: "./",
-            log_dir_path: "./logs",
-            ssl_certificate_path: "./ssl/certificate.crt",
-            ssl_certificate_key_path: "./ssl/certificate.key",
-            empty_path_try_files_path: "./index.html",
-        },
-    },
-
-}
-
-[2024-05-03 20:58:28]
-ServerNameBind {
-
-    listen_ip: "192.168.128.1",
-    listen_port: 81,
-    buffer_size: 1024,
-    bind_server_name: {
-        "localhost": Server {
-            root_path: "./",
-            log_dir_path: "./logs",
-            ssl_certificate_path: "./ssl/certificate.crt",
-            ssl_certificate_key_path: "./ssl/certificate.key",
-            empty_path_try_files_path: "./index.html",
-        },
-        "127.0.0.1": Server {
-            root_path: "./",
-            log_dir_path: "./logs",
-            ssl_certificate_path: "./ssl/certificate.crt",
-            ssl_certificate_key_path: "./ssl/certificate.key",
-            empty_path_try_files_path: "./index.html",
-        },
-    },
-
-}
-
-[2024-05-03 20:58:28]
-ServerNameBind {
-
-    listen_ip: "192.168.128.1",
-    listen_port: 81,
-    buffer_size: 1024,
-    bind_server_name: {
-        "localhost": Server {
-            root_path: "./",
-            log_dir_path: "./logs",
-            ssl_certificate_path: "./ssl/certificate.crt",
-            ssl_certificate_key_path: "./ssl/certificate.key",
-            empty_path_try_files_path: "./index.html",
-        },
-        "127.0.0.1": Server {
-            root_path: "./",
-            log_dir_path: "./logs",
-            ssl_certificate_path: "./ssl/certificate.crt",
-            ssl_certificate_key_path: "./ssl/certificate.key",
-            empty_path_try_files_path: "./index.html",
-        },
-    },
-
-}
-
-[2024-05-03 20:58:28]
-"http://127.0.0.1:80"
-
-[2024-05-03 20:58:28]
-"http://192.168.128.1:81"
-
-[2024-05-03 20:58:30]
+[2024-05-22 10:33:49]
 HttpRequest {
-
     method: "GET",
-    path: "/",
+    path: "/_static/out/browser/serviceWorker.js",
     headers: {
+        "Host": "127.0.0.1",
+        "Service-Worker": "script",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-Mode": "same-origin",
+        "Referer": "http://127.0.0.1/_static/out/browser/serviceWorker.js",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "Upgrade-Insecure-Requests": "1",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
         "Connection": "keep-alive",
-        "Host": "192.168.128.1:81",
+        "Cookie": "SameSite=Lax; Hm_lvt_9793f42b498361373512340937deb2a0=1689155374; _ga=GA1.1.39230079.1707025003; _ga_69MPZE94D5=GS1.1.1707025002.1.1.1707026740.0.0.0; pmaUser-1=kQPDRgPaTO%2FrEE7aszZUy7I1J297glrDTv3jOeSXCxxCLe2kFFUpFi4%2FdHo%3D",
         "Cache-Control": "max-age=0",
-        "Accept-Encoding": "gzip, deflate",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
+        "Accept": "*/*",
+        "Sec-Fetch-Dest": "serviceworker",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
     },
     body: {
-        "User-Agent": [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+        "Sec-Fetch-Site": [
+            "same-origin",
         ],
-        "Connection": [
-            "keep-alive",
+        "Host": [
+            "127.0.0.1",
         ],
-        "Accept-Language": [
-            "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+        "Accept-Encoding": [
+            "gzip, deflate, br, zstd",
+        ],
+        "Service-Worker": [
+            "script",
+        ],
+        "Accept": [
+            "*/*",
+        ],
+        "Referer": [
+            "http://127.0.0.1/_static/out/browser/serviceWorker.js",
+        ],
+        "Sec-Fetch-Mode": [
+            "same-origin",
+        ],
+        "Cookie": [
+            "SameSite=Lax; Hm_lvt_9793f42b498361373512340937deb2a0=1689155374; _ga=GA1.1.39230079.1707025003; _ga_69MPZE94D5=GS1.1.1707025002.1.1.1707026740.0.0.0; pmaUser-1=kQPDRgPaTO%2FrEE7aszZUy7I1J297glrDTv3jOeSXCxxCLe2kFFUpFi4%2FdHo%3D",
+        ],
+        "Sec-Fetch-Dest": [
+            "serviceworker",
         ],
         "Cache-Control": [
             "max-age=0",
         ],
-        "Accept-Encoding": [
-            "gzip, deflate",
+        "User-Agent": [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
         ],
-        "Accept": [
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Language": [
+            "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
         ],
-        "Host": [
-            "192.168.128.1:81",
-        ],
-        "Upgrade-Insecure-Requests": [
-            "1",
+        "Connection": [
+            "keep-alive",
         ],
     },
-
 }
 
-[2024-05-03 20:58:30]
-"Resource load fail:./index.html"
+[2024-05-22 10:33:49]
+"Resource load fail:./_static/out/browser/serviceWorker.js"
+
 ```
 
 ## 实际效果
 
-### 控制台输出
-
 ![alt text](markdown-images/image.png)
+
+### 控制台输出
 
 ![alt text](markdown-images/image-1.png)
 
-### 访问
-
-![alt text](markdown-images/image-2.png)
-
 ### 404
 
-![alt text](markdown-images/image-4.png)
-
-![alt text](markdown-images/image-3.png)
-
-### 域名绑定
-
-![alt text](markdown-images/image-5.png)
+![alt text](markdown-images/image-2.png)
