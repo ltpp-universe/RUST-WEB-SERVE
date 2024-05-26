@@ -2,6 +2,13 @@ use std::fmt::format;
 
 // APP名称
 pub const APP_NAME: &'static str = "RUST-WEB-SERVER";
+// 默认信息
+pub const DEFAULT_HTTP_PORT: &'static usize = &80;
+pub const DEFAULT_SCHEME: &'static str = "http";
+pub const DEFAULT_HOST: &'static str = "";
+pub const DEFAULT_PORT: &'static str = "80";
+pub const DEFAULT_PATH: &'static str = "/";
+pub const DEFAULT_METHOD: &'static str = "GET";
 // 配置
 pub const DEFAULT_LISTEN_IP: &'static str = &"127.0.0.1";
 pub const DEFAULT_LISTEN_PORT: &'static usize = &80;
@@ -13,10 +20,16 @@ pub const DEFAULT_SSL_CERTIFICATE_KEY_PATH: &'static str = &"./ssl/certificate.k
 pub const DEFAULT_SERVER_NAME: &'static str = DEFAULT_LISTEN_IP;
 pub const DEFAULT_EMPTY_PATH_TRY_FILES_PATH: &'static str = &"./index.html";
 pub const DEFAULT_RESPONSE_HEADER: &'static str = &"Server: RUST-WEB-SERVER";
+pub const DEFAULT_PROXY: &'static str = &"";
+pub const PROXY_URL_INFO: &'static str = "Proxy url info";
+pub const PROXY_TIMEOUT_SECONDS: &'static usize = &10;
 // 成功
 pub const RESOURCE_LOAD_SUCCESS: &'static str = "Resource load success";
 pub const CONFIG_PATH: &'static str = "config.json";
+pub const PROXY_SUCCESS: &'static str = "Proxy success";
 // 失败
+pub const INVALID_URL: &'static str = "Invalid URL";
+pub const INVALID_HOST: &'static str = "Invalid host";
 pub const JSON_DECODE_FAIL: &'static str = "Failed to deserialize JSON";
 pub const PARSE_HTTP_FAIL: &'static str = "Failed to parse HTTP";
 pub const GET_TIME_FAIL: &'static str = "Time went backwards";
@@ -25,6 +38,7 @@ pub const GET_CONFIG_FAIL: &'static str = "Failed to get config";
 pub const RESOURCE_LOAD_FAIL: &'static str = "Resource load fail";
 pub const OPEN_LOG_FILE_FAILED: &'static str = "Failed to open log file";
 pub const WRITE_LOG_FILE_FAILED: &'static str = "Failed to write to log file";
+pub const PROXY_FAILED: &'static str = "Failed to proxy";
 // 错误页
 pub const DEFAULT_ERROR_HTML:&'static str = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>{}</title><style>body{display:flex;justify-content:center}</style></head><body><h1>{}</h1></body></html>";
 // 100

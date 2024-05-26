@@ -1,6 +1,7 @@
 use super::body;
-use crate::config;
 use crate::config::config::Server;
+use crate::global::global::{DEFAULT_METHOD, INVALID_HOST, INVALID_URL};
+use crate::http::header::HOST;
 use crate::log::log;
 use crate::print::print::{self, BLUE};
 use std::collections::HashMap;
@@ -9,11 +10,20 @@ use std::{
     ptr::hash,
     str::{Split, SplitWhitespace},
 };
+use url::Url;
+
+pub struct HttpBase {
+    pub scheme: String,
+    pub host: String,
+    pub port: String,
+    pub path: String,
+}
 
 #[derive(Debug, Clone)]
 pub struct HttpRequest {
-    pub method: String,
     pub path: String,
+    pub method: String,
+    pub query: Vec<(String, String)>,
     pub headers: HashMap<String, String>,
     pub body: HashMap<String, Vec<String>>,
 }
@@ -60,12 +70,14 @@ impl HttpRequest {
                     body.entry(key).or_insert_with(Vec::new).push(value);
                 }
             }
-            let path: String = HttpRequest::get_path_from_request_path(&full_path);
+            let path: String = HttpRequest::get_path_from_request_url(&full_path);
+            let query: Vec<(String, String)> = HttpRequest::get_query_from_request_url(&full_path);
             let res_request: HttpRequest = HttpRequest {
                 method,
                 path,
                 headers,
                 body,
+                query,
             };
             log::write_no_print(&res_request, server);
             Some(res_request)
@@ -77,7 +89,7 @@ impl HttpRequest {
     /**
      * 获取GET参数
      */
-    pub fn get_query(url: &str) -> Vec<(String, String)> {
+    pub fn get_query_from_request_url(url: &str) -> Vec<(String, String)> {
         let mut query_params: Vec<(String, String)> = vec![];
         if let Some(query_start) = url.find('?') {
             // 找到第一个 '#' 或者直到字符串结尾
@@ -94,9 +106,9 @@ impl HttpRequest {
     }
 
     /**
-     * 获取域名
+     * 获取域名和端口
      */
-    pub fn get_domain(url: &str) -> String {
+    pub fn get_domain_port(url: &str) -> String {
         let find_str: &str = "://";
         if let Some(pos_scheme_end) = url.find(find_str) {
             let pos_domain_start: usize = pos_scheme_end + find_str.len();
@@ -160,9 +172,59 @@ impl HttpRequest {
     }
 
     /**
+     * 获取http_base
+     */
+    pub fn get_http_base(url: &str) -> HttpBase {
+        // 解析 URL
+        let parsed_url = Url::parse(url).expect(INVALID_URL);
+        // 获取 scheme (方案) 部分
+        let scheme: String = parsed_url.scheme().to_owned();
+        // 获取 host (主机) 部分
+        let host: String = parsed_url.host_str().expect(INVALID_HOST).to_owned();
+        // 获取端口号，如果有的话
+        let port: String = match parsed_url.port_or_known_default() {
+            Some(port) => format!(":{}", port),
+            None => "".to_string(),
+        };
+        // 获取 path (路径) 部分
+        let path: String = parsed_url.path().to_owned();
+
+        HttpBase {
+            scheme,
+            host,
+            port,
+            path,
+        }
+    }
+
+    /**
+     * 获取请求地址不含参数和哈希
+     */
+    pub fn get_url_without_query_hash(url: &str) -> String {
+        let http_base: HttpBase = HttpRequest::get_http_base(url);
+        // 拼接成不含查询参数和哈希的 URL
+        format!(
+            "{}://{}{}{}",
+            http_base.scheme, http_base.host, http_base.port, http_base.path
+        )
+    }
+
+    /**
+     * 获取请求地址不含路径和参数和哈希
+     */
+    pub fn get_url_without_path_query_hash(url: &str) -> String {
+        let http_base: HttpBase = HttpRequest::get_http_base(url);
+        // 拼接成不含查询参数和哈希的 URL
+        format!(
+            "{}://{}{}",
+            http_base.scheme, http_base.host, http_base.port
+        )
+    }
+
+    /**
      * 从请求路径获取路径
      */
-    pub fn get_path_from_request_path(url_path: &str) -> String {
+    pub fn get_path_from_request_url(url_path: &str) -> String {
         let pos_path_start: Option<usize> = url_path.find('/');
         let pos_query_start: Option<usize> = url_path.find('?');
         let pos_hash_start: Option<usize> = url_path.find('#');
@@ -174,5 +236,42 @@ impl HttpRequest {
             path = &url_path[path_start..*pos_path_end];
         }
         path.to_owned()
+    }
+
+    /**
+     * 获取请求
+     */
+    pub fn process_request(res: Option<HttpRequest>) -> HttpRequest {
+        if let Some(mut http_request) = res {
+            let request_path = http_request.path.clone();
+            // 检查是否有 Host 头
+            match http_request.headers.get(HOST) {
+                Some(http_host) => {
+                    // 如果有 Host 头，复制它
+                    let request_host = http_host.clone();
+                    // 返回 http_request 的引用
+                    http_request
+                }
+                None => {
+                    // 如果没有 Host 头，返回一个新创建的 HttpRequest
+                    HttpRequest {
+                        method: DEFAULT_METHOD.to_owned(),
+                        body: HashMap::new(), // 假设 body 是空的
+                        path: request_path,
+                        headers: HashMap::new(), // 假设 headers 是空的
+                        query: vec![],
+                    }
+                }
+            }
+        } else {
+            // 如果 res 是 None，返回一个默认的 HttpRequest
+            HttpRequest {
+                method: DEFAULT_METHOD.to_owned(),
+                body: HashMap::new(),
+                path: String::new(),
+                headers: HashMap::new(),
+                query: vec![],
+            }
+        }
     }
 }

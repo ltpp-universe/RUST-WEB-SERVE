@@ -6,3 +6,5 @@ pub const CONNECTION: &'static str = "Connection";
 pub const ACCEPT_ENCODING: &'static str = "Accept-Encoding";
 pub const ACCEPT_LANGUAGE: &'static str = "Accept-Language";
 pub const HOST: &'static str = "Host";
+pub const GET: &'static str = &"GET";
+pub const POST: &'static str = &"POST";

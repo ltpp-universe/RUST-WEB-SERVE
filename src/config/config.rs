@@ -1,8 +1,8 @@
 use crate::global::global::{
     CONFIG_PATH, DEFAULT_BUFFER_SIZE, DEFAULT_EMPTY_PATH_TRY_FILES_PATH, DEFAULT_LISTEN_IP,
-    DEFAULT_LISTEN_PORT, DEFAULT_LOG_DIR_PATH, DEFAULT_RESPONSE_HEADER, DEFAULT_ROOT_PATH,
-    DEFAULT_SERVER_NAME, DEFAULT_SSL_CERTIFICATE_KEY_PATH, DEFAULT_SSL_CERTIFICATE_PATH,
-    JSON_DECODE_FAIL,
+    DEFAULT_LISTEN_PORT, DEFAULT_LOG_DIR_PATH, DEFAULT_PROXY, DEFAULT_RESPONSE_HEADER,
+    DEFAULT_ROOT_PATH, DEFAULT_SERVER_NAME, DEFAULT_SSL_CERTIFICATE_KEY_PATH,
+    DEFAULT_SSL_CERTIFICATE_PATH, JSON_DECODE_FAIL, PROXY_TIMEOUT_SECONDS,
 };
 use crate::print::print::{self, GREEN};
 use std::collections::HashMap;
@@ -21,6 +21,8 @@ pub struct Server {
     pub ssl_certificate_key_path: String,
     pub empty_path_try_files_path: String,
     pub response_header: String,
+    pub proxy: String,
+    pub proxy_timeout_seconds: usize,
 }
 
 impl fmt::Display for Server {
@@ -82,6 +84,8 @@ impl Config {
             ssl_certificate_key_path: (*DEFAULT_SSL_CERTIFICATE_KEY_PATH).to_owned(),
             empty_path_try_files_path: (*DEFAULT_EMPTY_PATH_TRY_FILES_PATH).to_owned(),
             response_header: (*DEFAULT_RESPONSE_HEADER).to_owned(),
+            proxy: (*DEFAULT_PROXY).to_owned(),
+            proxy_timeout_seconds: (*PROXY_TIMEOUT_SECONDS).to_owned(),
         }
     }
 

@@ -11,7 +11,9 @@
                     "ssl_certificate_path": "./ssl/certificate.crt",
                     "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
-                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git"
+                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
+                    "proxy": "",
+                    "proxy_timeout_seconds": 10
                 },
                 "localhost": {
                     "root_path": "./",
@@ -19,7 +21,9 @@
                     "ssl_certificate_path": "./ssl/certificate.crt",
                     "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
-                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git"
+                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
+                    "proxy": "http://www.ltpp.vip:60024/visit/add?origin=sqs",
+                    "proxy_timeout_seconds": 10
                 }
             }
         },
@@ -34,7 +38,9 @@
                     "ssl_certificate_path": "./ssl/certificate.crt",
                     "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
-                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git"
+                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
+                    "proxy": "http://www.ltpp.vip:60024/visit/add?origin=sqs",
+                    "proxy_timeout_seconds": 10
                 }
             }
         }

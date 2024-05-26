@@ -3,11 +3,14 @@ use crate::global::global::{
     GET_CONFIG_FAIL, NOT_FOUND_TEXT, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
 };
 use crate::http::body::REFERER;
-use crate::http::header::HOST;
+use crate::http::header::{GET, HOST};
 use crate::http::request::HttpRequest;
 use crate::http::response;
 use crate::print::print::{self, GREEN, RED, YELLOW};
+use crate::proxy;
 use crate::utils::file;
+use regex::Regex;
+use std::error::Error;
 
 use std::collections::{HashMap, HashSet};
 use std::{
@@ -53,7 +56,13 @@ impl Base {
                     },
                     None => {
                         let mut tem_hash: HashMap<String, Server> = HashMap::new();
+                        // 不含端口
                         tem_hash.insert(one_server_key.clone(), one_server_value.clone());
+                        // 含端口
+                        tem_hash.insert(
+                            format!("{}:{}", one_server_key.clone(), one_config.listen_port),
+                            one_server_value.clone(),
+                        );
                         port_server_list.insert(one_config.listen_port, tem_hash);
                     }
                 }
@@ -141,6 +150,17 @@ impl Base {
     }
 
     /**
+     * 判断是否需要代理
+     */
+    pub fn judge_need_proxy(server: &Server) -> bool {
+        if server.proxy.is_empty() {
+            return false;
+        }
+        let https_regex = Regex::new(r"^https?://[^\s/$.?#].[^\s]*$").unwrap();
+        https_regex.is_match(&server.proxy)
+    }
+
+    /**
      * 处理请求
      */
     pub fn handle_connection(
@@ -156,22 +176,16 @@ impl Base {
         stream.read(&mut buffer).unwrap();
         let request: borrow::Cow<str> = String::from_utf8_lossy(&buffer[..]);
         let res: Option<HttpRequest> = HttpRequest::parse_http_request(&request, server);
-        let mut request_path: String = String::new();
-        let mut request_host: String = String::new();
-        if let Some(http_request) = &res {
-            request_path = http_request.path.to_owned();
-            match http_request.headers.get(HOST) {
-                Some(http_host) => {
-                    request_host = http_host.to_owned();
+        let http_request: HttpRequest = HttpRequest::process_request(res.clone());
+        let request_path: String = http_request.path.clone();
+        match http_request.headers.get(HOST) {
+            Some(host) => match server_map.get(host) {
+                Some(tem_server) => {
+                    server = tem_server;
+                    has_find_server = true;
                 }
                 _ => {}
-            };
-        }
-        match server_map.get(&request_host) {
-            Some(tem_server) => {
-                server = tem_server;
-                has_find_server = true;
-            }
+            },
             _ => {}
         }
         let file_path: String = Base::get_full_file_path(server, &request_path);
@@ -179,16 +193,25 @@ impl Base {
         let mut load_success: bool = false;
         let mut res_response: Vec<u8> = vec![];
         if has_find_server {
-            if let Some(html_res) = file::get_file_data(&file_path, server) {
+            if Base::judge_need_proxy(server) {
+                contents =
+                    match proxy::proxy::send_sync_request(&server, &http_request, buffer_size) {
+                        Ok(response) => response,
+                        Err(err) => vec![],
+                    };
                 load_success = true;
-                contents = html_res;
-                print::println(
-                    &format!("{}:{}", &RESOURCE_LOAD_SUCCESS, &file_path),
-                    &GREEN,
-                    server,
-                );
-                res_response = response::response(200, &contents, server);
+            } else {
+                if let Some(html_res) = file::get_file_data(&file_path, server) {
+                    load_success = true;
+                    contents = html_res;
+                    print::println(
+                        &format!("{}:{}", &RESOURCE_LOAD_SUCCESS, &file_path),
+                        &GREEN,
+                        server,
+                    );
+                }
             }
+            res_response = response::response(200, &contents, server);
         }
         if !load_success || !has_find_server {
             let (contents, code) = response::load_other_html(404, server);
