@@ -9,6 +9,7 @@ pub const DEFAULT_HOST: &'static str = "";
 pub const DEFAULT_PORT: &'static str = "80";
 pub const DEFAULT_PATH: &'static str = "/";
 pub const DEFAULT_METHOD: &'static str = "GET";
+pub const DANGER_PATH: &'static str = "../";
 // 配置
 pub const DEFAULT_LISTEN_IP: &'static str = &"127.0.0.1";
 pub const DEFAULT_LISTEN_PORT: &'static usize = &80;

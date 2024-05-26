@@ -1,6 +1,6 @@
 use crate::config::config::{Config, Server};
 use crate::global::global::{
-    GET_CONFIG_FAIL, NOT_FOUND_TEXT, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
+    DANGER_PATH, GET_CONFIG_FAIL, NOT_FOUND_TEXT, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
 };
 use crate::http::body::REFERER;
 use crate::http::header::{GET, HOST};
@@ -169,6 +169,9 @@ impl Base {
         buffer_size: usize,
         server_map: HashMap<String, Server>,
     ) {
+        let mut contents: Vec<u8> = vec![];
+        let mut load_success: bool = false;
+        let mut res_response: Vec<u8> = vec![];
         // 是否找到请求来源域名对应配置，只允许绑定的域名访问
         let mut has_find_server: bool = false;
         let mut server: &Server = &Config::get_default_server();
@@ -189,9 +192,13 @@ impl Base {
             _ => {}
         }
         let file_path: String = Base::get_full_file_path(server, &request_path);
-        let mut contents: Vec<u8> = vec![];
-        let mut load_success: bool = false;
-        let mut res_response: Vec<u8> = vec![];
+
+        // 危险路径
+        if file_path.contains(DANGER_PATH) {
+            load_success = false;
+            has_find_server = false;
+        }
+
         if has_find_server {
             if Base::judge_need_proxy(server) {
                 contents =
@@ -213,6 +220,7 @@ impl Base {
             }
             res_response = response::response(200, &contents, server);
         }
+
         if !load_success || !has_find_server {
             let (contents, code) = response::load_other_html(404, server);
             print::println(
