@@ -1,7 +1,5 @@
-use super::body;
 use crate::config::config::Server;
-use crate::global::global::{DEFAULT_METHOD, INVALID_HOST, INVALID_URL};
-use crate::http::header::HOST;
+use crate::global::global::{DEFAULT_METHOD, HOST, INVALID_HOST, INVALID_URL};
 use crate::log::log;
 use crate::print::print::{self, BLUE};
 use std::collections::HashMap;

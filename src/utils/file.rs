@@ -1,9 +1,11 @@
 use crate::config::config::Server;
-use crate::global::global::RESOURCE_LOAD_SUCCESS;
-use crate::print::print::{println, GREEN, RED};
+use crate::file_safe::file_safe;
+use crate::global::global::{
+    HOTLINK_PROTECTION_MATCH_MSG, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
+};
+use crate::http::response;
+use crate::print::print::{self, GREEN, RED};
 use std::{fs, io};
-
-use super::time::global::RESOURCE_LOAD_FAIL;
 
 pub fn dir_exists(path: &str) -> bool {
     fs::metadata(path)
@@ -29,16 +31,19 @@ pub fn get_file_data(file_path: &str, server: &Server) -> Option<Vec<u8>> {
             contents_result = fs::read(&file_path);
             match contents_result {
                 Ok(contents) => {
-                    println(
-                        &format!("{}:{}", &RESOURCE_LOAD_SUCCESS, &file_path),
+                    print::println(
+                        &format!("{} => {}", &RESOURCE_LOAD_SUCCESS, &file_path),
                         &GREEN,
                         server,
                     );
                     return Some(contents);
                 }
                 Err(err) => {
-                    println(
-                        &format!("{}:{}------>{}", &RESOURCE_LOAD_FAIL, &file_path, err),
+                    print::println(
+                        &format!(
+                            "{} => {}\nError => {}",
+                            &RESOURCE_LOAD_FAIL, &file_path, err
+                        ),
                         &RED,
                         server,
                     );

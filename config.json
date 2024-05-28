@@ -1,9 +1,9 @@
 {
     "server": [
         {
-            "listen_ip": "127.0.0.1",
+            "listen_ip": "0.0.0.0",
             "listen_port": 80,
-            "buffer_size": 1024,
+            "buffer_size": 10240,
             "bind_server_name": {
                 "127.0.0.1": {
                     "root_path": "./",
@@ -11,9 +11,19 @@
                     "ssl_certificate_path": "./ssl/certificate.crt",
                     "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
-                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
-                    "proxy": "",
-                    "proxy_timeout_seconds": 10
+                    "response_header_list": [
+                        "Server: RUST-WEB-SERVER",
+                        "Access-Control-Allow-Credentials: true",
+                        "Access-Control-Allow-Headers: *",
+                        "Access-Control-Allow-Methods: *",
+                        "Access-Control-Allow-Origin: *",
+                        "Git: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
+                        "Content-Type: text/html",
+                        "Content-Encoding: gzip"
+                    ],
+                    "proxy": [],
+                    "proxy_timeout_seconds": 10,
+                    "hotlink_protection": []
                 },
                 "localhost": {
                     "root_path": "./",
@@ -21,16 +31,30 @@
                     "ssl_certificate_path": "./ssl/certificate.crt",
                     "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
-                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
-                    "proxy": "http://www.ltpp.vip:60024/visit/add?origin=sqs",
-                    "proxy_timeout_seconds": 10
+                    "response_header_list": [
+                        "Server: RUST-WEB-SERVER",
+                        "Access-Control-Allow-Credentials: true",
+                        "Access-Control-Allow-Headers: *",
+                        "Access-Control-Allow-Methods: *",
+                        "Access-Control-Allow-Origin: *",
+                        "Git: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
+                        "Content-Type: application/json",
+                        "Content-Encoding: gzip"
+                    ],
+                    "proxy": [
+                        "http://www.ltpp.vip:60005/visit/add?origin=proxy1",
+                        "http://www.ltpp.vip:60005/visit/add?origin=proxy2",
+                        "http://www.ltpp.vip:60005/visit/add?origin=proxy3"
+                    ],
+                    "proxy_timeout_seconds": 10,
+                    "hotlink_protection": []
                 }
             }
         },
         {
-            "listen_ip": "127.0.0.1",
+            "listen_ip": "0.0.0.0",
             "listen_port": 81,
-            "buffer_size": 1024,
+            "buffer_size": 10240,
             "bind_server_name": {
                 "127.0.0.1": {
                     "root_path": "./",
@@ -38,9 +62,24 @@
                     "ssl_certificate_path": "./ssl/certificate.crt",
                     "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
-                    "response_header": "Server: RUST-WEB-SERVER\r\nGit: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
-                    "proxy": "http://www.ltpp.vip:60024/visit/add?origin=sqs",
-                    "proxy_timeout_seconds": 10
+                    "response_header_list": [
+                        "Access-Control-Allow-Origin: *",
+                        "Access-Control-Allow-Methods: *",
+                        "Access-Control-Allow-Headers: *",
+                        "Access-Control-Allow-Credentials: true",
+                        "Server: RUST-WEB-SERVER",
+                        "Git: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
+                        "Content-Encoding: gzip"
+                    ],
+                    "proxy": [
+                        "http://www.ltpp.vip:60005/visit/add?origin=proxy1",
+                        "http://www.ltpp.vip:60005/visit/add?origin=proxy2",
+                        "http://www.ltpp.vip:60005/visit/add?origin=proxy3"
+                    ],
+                    "proxy_timeout_seconds": 10,
+                    "hotlink_protection": [
+                        "origin=1$"
+                    ]
                 }
             }
         }

@@ -1,8 +1,9 @@
 use crate::global::global::{
-    CONFIG_PATH, DEFAULT_BUFFER_SIZE, DEFAULT_EMPTY_PATH_TRY_FILES_PATH, DEFAULT_LISTEN_IP,
-    DEFAULT_LISTEN_PORT, DEFAULT_LOG_DIR_PATH, DEFAULT_PROXY, DEFAULT_RESPONSE_HEADER,
-    DEFAULT_ROOT_PATH, DEFAULT_SERVER_NAME, DEFAULT_SSL_CERTIFICATE_KEY_PATH,
-    DEFAULT_SSL_CERTIFICATE_PATH, JSON_DECODE_FAIL, PROXY_TIMEOUT_SECONDS,
+    BINDING, CONFIG_PATH, DEFAULT_BUFFER_SIZE, DEFAULT_EMPTY_PATH_TRY_FILES_PATH,
+    DEFAULT_HOTLINK_PROTECTION, DEFAULT_LISTEN_IP, DEFAULT_LISTEN_PORT, DEFAULT_LOG_DIR_PATH,
+    DEFAULT_PROXY, DEFAULT_RESPONSE_HEADER, DEFAULT_ROOT_PATH, DEFAULT_SERVER_NAME,
+    DEFAULT_SSL_CERTIFICATE_KEY_PATH, DEFAULT_SSL_CERTIFICATE_PATH, JSON_DECODE_FAIL,
+    LOCALHOST_LISTEN_IP, LOCAL_LISTEN_IP, PROXY_TIMEOUT_SECONDS,
 };
 use crate::print::print::{self, GREEN};
 use std::collections::HashMap;
@@ -20,9 +21,10 @@ pub struct Server {
     pub ssl_certificate_path: String,
     pub ssl_certificate_key_path: String,
     pub empty_path_try_files_path: String,
-    pub response_header: String,
-    pub proxy: String,
+    pub response_header_list: Vec<String>,
+    pub proxy: Vec<String>,
     pub proxy_timeout_seconds: usize,
+    pub hotlink_protection: Vec<String>,
 }
 
 impl fmt::Display for Server {
@@ -47,13 +49,12 @@ impl fmt::Display for ServerNameBind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut bind_server_name: String = String::new();
         for (key, value) in &self.bind_server_name {
-            bind_server_name.push_str(&format!("{}:{}\n", key, value));
+            bind_server_name.push_str(&format!(
+                "{} => {}:{}\n{:#?}\n",
+                BINDING, key, self.listen_port, value
+            ));
         }
-        write!(
-            f,
-            "listen_ip:{}\nlisten_port:{}\nbind_server_name:{}",
-            self.listen_ip, self.listen_port, bind_server_name
-        )
+        f.write_str(&bind_server_name)
     }
 }
 
@@ -83,17 +84,26 @@ impl Config {
             ssl_certificate_path: (*DEFAULT_SSL_CERTIFICATE_PATH).to_owned(),
             ssl_certificate_key_path: (*DEFAULT_SSL_CERTIFICATE_KEY_PATH).to_owned(),
             empty_path_try_files_path: (*DEFAULT_EMPTY_PATH_TRY_FILES_PATH).to_owned(),
-            response_header: (*DEFAULT_RESPONSE_HEADER).to_owned(),
-            proxy: (*DEFAULT_PROXY).to_owned(),
+            response_header_list: vec![(*DEFAULT_RESPONSE_HEADER).to_owned()],
+            proxy: vec![(*DEFAULT_PROXY).to_owned()],
             proxy_timeout_seconds: (*PROXY_TIMEOUT_SECONDS).to_owned(),
+            hotlink_protection: vec![(*DEFAULT_HOTLINK_PROTECTION).to_owned()],
         }
     }
 
     /**
      * 获取默认ServerNameBind
      */
-    pub fn get_default_server_name_bind() -> ServerNameBind {
+    fn get_default_server_name_bind() -> ServerNameBind {
         let mut server_name_map: HashMap<String, Server> = HashMap::new();
+        // localhost
+        server_name_map.insert(
+            (*LOCALHOST_LISTEN_IP).to_owned(),
+            Config::get_default_server(),
+        );
+        // 127.0.0.1
+        server_name_map.insert((*LOCAL_LISTEN_IP).to_owned(), Config::get_default_server());
+        // 0.0.0.0
         server_name_map.insert(
             (*DEFAULT_SERVER_NAME).to_owned(),
             Config::get_default_server(),
@@ -142,7 +152,7 @@ impl Config {
     /**
      * 获取try_files_path
      */
-    pub fn get_try_files_path(server: &Server) -> String {
+    fn get_try_files_path(server: &Server) -> String {
         let mut try_files_path: String = String::new();
         let mut is_start: bool = false;
         for tem_char in server.empty_path_try_files_path.chars() {

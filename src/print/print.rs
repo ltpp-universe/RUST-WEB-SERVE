@@ -27,11 +27,11 @@ fn base_print<T: fmt::Display + fmt::Debug>(str: &T, color: &str, server: &Serve
     let print_mutex: sync::Mutex<()> = PRINTLN_MUTEX;
     let lock: sync::MutexGuard<()> = print_mutex.lock().unwrap();
     if has_br {
-        print_msg = format!("{}[{}]{}{}{:#?}{}\n", GREEN, now, END, color, *str, END);
-        log_msg = format!("[{}]\n{:#?}\n", now, *str);
+        print_msg = format!("{}[{}]\n{}{}{}{}\n", GREEN, now, END, color, *str, END);
+        log_msg = format!("[{}]\n{}\n", now, *str);
     } else {
-        print_msg = format!("{}[{}]{}{}{:#?}{}", GREEN, now, END, color, *str, END);
-        log_msg = format!("[{}]\n{:#?}", now, *str);
+        print_msg = format!("{}[{}]\n{}{}{}{}", GREEN, now, END, color, *str, END);
+        log_msg = format!("[{}]\n{}", now, *str);
     }
     print!("{}", print_msg);
     drop(lock);

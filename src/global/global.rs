@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 // APP名称
 pub const APP_NAME: &'static str = "RUST-WEB-SERVER";
 // 默认信息
@@ -10,20 +8,46 @@ pub const DEFAULT_PORT: &'static str = "80";
 pub const DEFAULT_PATH: &'static str = "/";
 pub const DEFAULT_METHOD: &'static str = "GET";
 pub const DANGER_PATH: &'static str = "../";
+// 数据
+pub const NOT_PROXY: &'static i32 = &-1;
+pub const RESPONSE_HEADER_BR: &'static str = &"\r\n";
+pub const HOTLINK_PROTECTION_MATCH_MSG: &'static str = &"Matched to hotlink protection";
+pub const USER_AGENT: &'static str = "User-Agent";
+pub const ACCEPT: &'static str = "Accept";
+pub const CONTENT_TYPE: &'static str = "Content-Type";
+pub const CONTENT_LENGTH: &'static str = "Content-Length";
+pub const CONNECTION: &'static str = "Connection";
+pub const ACCEPT_ENCODING: &'static str = "Accept-Encoding";
+pub const ACCEPT_LANGUAGE: &'static str = "Accept-Language";
+pub const HOST: &'static str = "Host";
+pub const GET: &'static str = &"GET";
+pub const POST: &'static str = &"POST";
+pub const PUT: &'static str = &"PUT";
+pub const DELETE: &'static str = &"DELETE";
+pub const REFERER: &'static str = "Referer";
+pub const COOKIE: &'static str = "Cookie";
+pub const GZIP: &'static str = "gzip";
+pub const BINDING: &'static str = "Binding";
+pub const LISTENING: &'static str = "Listening";
 // 配置
-pub const DEFAULT_LISTEN_IP: &'static str = &"127.0.0.1";
+pub const DEFAULT_LISTEN_IP: &'static str = &"0.0.0.0";
+pub const LOCAL_LISTEN_IP: &'static str = &"127.0.0.1";
+pub const LOCALHOST_LISTEN_IP: &'static str = &"localhost";
 pub const DEFAULT_LISTEN_PORT: &'static usize = &80;
-pub const DEFAULT_BUFFER_SIZE: &'static usize = &1024;
+pub const DEFAULT_BUFFER_SIZE: &'static usize = &10240;
 pub const DEFAULT_ROOT_PATH: &'static str = &"./";
 pub const DEFAULT_LOG_DIR_PATH: &'static str = &"./logs";
 pub const DEFAULT_SSL_CERTIFICATE_PATH: &'static str = &"./ssl/certificate.crt";
 pub const DEFAULT_SSL_CERTIFICATE_KEY_PATH: &'static str = &"./ssl/certificate.key";
 pub const DEFAULT_SERVER_NAME: &'static str = DEFAULT_LISTEN_IP;
 pub const DEFAULT_EMPTY_PATH_TRY_FILES_PATH: &'static str = &"./index.html";
-pub const DEFAULT_RESPONSE_HEADER: &'static str = &"Server: RUST-WEB-SERVER";
+pub const DEFAULT_RESPONSE_HEADER: &'static str = &"Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Credentials: true\r\nConnection: keep-alive\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nServer: RUST-WEB-SERVER";
 pub const DEFAULT_PROXY: &'static str = &"";
-pub const PROXY_URL_INFO: &'static str = "Proxy url info";
 pub const PROXY_TIMEOUT_SECONDS: &'static usize = &10;
+pub const DEFAULT_HOTLINK_PROTECTION: &'static str = &"";
+// 日志
+pub const PROXY_URL_INFO: &'static str = "Proxy url info";
+pub const REQUEST_RESPONSE_INFO: &'static str = "Request response info";
 // 成功
 pub const RESOURCE_LOAD_SUCCESS: &'static str = "Resource load success";
 pub const CONFIG_PATH: &'static str = "config.json";
@@ -40,6 +64,7 @@ pub const RESOURCE_LOAD_FAIL: &'static str = "Resource load fail";
 pub const OPEN_LOG_FILE_FAILED: &'static str = "Failed to open log file";
 pub const WRITE_LOG_FILE_FAILED: &'static str = "Failed to write to log file";
 pub const PROXY_FAILED: &'static str = "Failed to proxy";
+pub const PARSE_RESPONSE_HEADER_FAILED: &'static str = "Failed to parse response header";
 // 错误页
 pub const DEFAULT_ERROR_HTML:&'static str = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>{}</title><style>body{display:flex;justify-content:center}</style></head><body><h1>{}</h1></body></html>";
 // 100

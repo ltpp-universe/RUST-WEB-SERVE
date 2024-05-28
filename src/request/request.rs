@@ -1,14 +1,14 @@
 use crate::config::config::{Config, Server};
+use crate::file_safe::file_safe;
 use crate::global::global::{
-    DANGER_PATH, GET_CONFIG_FAIL, NOT_FOUND_TEXT, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
+    BINDING, GET, GET_CONFIG_FAIL, HOST, LISTENING, NOT_FOUND_TEXT, NOT_PROXY, REFERER,
+    RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
 };
-use crate::http::body::REFERER;
-use crate::http::header::{GET, HOST};
-use crate::http::request::HttpRequest;
-use crate::http::response;
-use crate::print::print::{self, GREEN, RED, YELLOW};
+use crate::http::{self, request::HttpRequest, response};
+use crate::print::print::{self, RED, YELLOW};
 use crate::proxy;
 use crate::utils::file;
+use rand::Rng;
 use regex::Regex;
 use std::error::Error;
 
@@ -21,16 +21,16 @@ use std::{
     thread,
 };
 
-pub struct Base {}
+pub struct Request {}
 
-impl Base {
+impl Request {
     /**
      * 运行
      */
     pub fn run() {
         let config: Result<Config, std::io::Error> = Config::load_config();
         match config {
-            Ok(config) => Base::listen(&config),
+            Ok(config) => Request::listen(&config),
             _ => panic!("{}", GET_CONFIG_FAIL),
         }
     }
@@ -38,7 +38,7 @@ impl Base {
     /**
      * 监听
      */
-    pub fn listen(config: &Config) {
+    fn listen(config: &Config) {
         let mut handles: Vec<thread::JoinHandle<()>> = vec![];
         let mut port_server_list: HashMap<usize, HashMap<String, Server>> = HashMap::new();
         let mut port_map_listener: HashMap<usize, Arc<Mutex<net::TcpListener>>> = HashMap::new();
@@ -83,10 +83,21 @@ impl Base {
                 let listener_arc: Arc<Mutex<net::TcpListener>> = Arc::new(Mutex::new(listener));
                 port_map_listener.insert(port, Arc::clone(&listener_arc));
                 print::println(
-                    &format!("http://{}:{}", one_config.listen_ip, port),
+                    &format!("{} => {}:{}", LISTENING, one_config.listen_ip, port),
                     &YELLOW,
                     &one_server_value,
                 );
+                for one_bind_server in config.server.clone() {
+                    for (one_bind_server_key, one_bind_server_value) in
+                        one_bind_server.bind_server_name
+                    {
+                        print::println(
+                            &format!("{} => {}:{}", BINDING, one_bind_server_key, port),
+                            &YELLOW,
+                            &one_server_value,
+                        );
+                    }
+                }
                 let listener_clone: Arc<Mutex<net::TcpListener>> = Arc::clone(&listener_arc);
                 let one_config_clone: Server = one_server_value.clone();
                 let port_map_listener_clone: HashMap<usize, Arc<Mutex<net::TcpListener>>> =
@@ -107,7 +118,7 @@ impl Base {
                         let server_map_list_clone: HashMap<String, Server> =
                             server_map_list.clone();
                         thread::spawn(move || {
-                            Base::handle_connection(
+                            Request::handle_connection(
                                 stream,
                                 port,
                                 buffer_size,
@@ -128,7 +139,7 @@ impl Base {
     /**
      * 获取资源完整路径
      */
-    pub fn get_full_file_path(server: &Server, request_path: &String) -> String {
+    fn get_full_file_path(server: &Server, request_path: &String) -> String {
         let mut tem_request_path: String = String::from(request_path);
         let mut root_path: String = server.root_path.clone();
         if let Some(unix_path_str) = path::PathBuf::from(&root_path).to_str() {
@@ -152,28 +163,38 @@ impl Base {
     /**
      * 判断是否需要代理
      */
-    pub fn judge_need_proxy(server: &Server) -> bool {
-        if server.proxy.is_empty() {
-            return false;
+    pub fn judge_need_proxy(server: &Server) -> i32 {
+        let proxy_len: usize = server.proxy.len();
+        if proxy_len == 0 {
+            return *NOT_PROXY;
         }
-        let https_regex = Regex::new(r"^https?://[^\s/$.?#].[^\s]*$").unwrap();
-        https_regex.is_match(&server.proxy)
+        let mut safe_proxy_list: Vec<String> = vec![];
+        let https_regex: Regex = Regex::new(r"^https?://[^\s/$.?#].[^\s]*$").unwrap();
+        for tem in &server.proxy {
+            if https_regex.is_match(tem) {
+                safe_proxy_list.push(tem.clone());
+            }
+        }
+        let safe_proxy_len: usize = safe_proxy_list.len();
+        if safe_proxy_len == 0 {
+            return *NOT_PROXY;
+        }
+        let mut rng: rand::prelude::ThreadRng = rand::thread_rng();
+        let random_index: i32 = rng.gen_range(0..safe_proxy_len) as i32;
+        return random_index;
     }
 
     /**
      * 处理请求
      */
-    pub fn handle_connection(
+    fn handle_connection(
         mut stream: net::TcpStream,
         port: usize,
         buffer_size: usize,
         server_map: HashMap<String, Server>,
     ) {
-        let mut contents: Vec<u8> = vec![];
-        let mut load_success: bool = false;
-        let mut res_response: Vec<u8> = vec![];
-        // 是否找到请求来源域名对应配置，只允许绑定的域名访问
-        let mut has_find_server: bool = false;
+        // 是否找到请求来源域名/IP对应配置，只允许绑定的域名/IP访问，只允许防盗链以外的安全的访问
+        let mut is_safe_request: bool = false;
         let mut server: &Server = &Config::get_default_server();
         let mut buffer: Vec<u8> = vec![0; buffer_size];
         stream.read(&mut buffer).unwrap();
@@ -185,51 +206,30 @@ impl Base {
             Some(host) => match server_map.get(host) {
                 Some(tem_server) => {
                     server = tem_server;
-                    has_find_server = true;
+                    is_safe_request = true;
                 }
                 _ => {}
             },
             _ => {}
         }
-        let file_path: String = Base::get_full_file_path(server, &request_path);
+        let file_path: String = Request::get_full_file_path(server, &request_path);
 
-        // 危险路径
-        if file_path.contains(DANGER_PATH) {
-            load_success = false;
-            has_find_server = false;
-        }
-
-        if has_find_server {
-            if Base::judge_need_proxy(server) {
-                contents =
-                    match proxy::proxy::send_sync_request(&server, &http_request, buffer_size) {
-                        Ok(response) => response,
-                        Err(err) => vec![],
-                    };
-                load_success = true;
-            } else {
-                if let Some(html_res) = file::get_file_data(&file_path, server) {
-                    load_success = true;
-                    contents = html_res;
-                    print::println(
-                        &format!("{}:{}", &RESOURCE_LOAD_SUCCESS, &file_path),
-                        &GREEN,
-                        server,
-                    );
-                }
-            }
-            res_response = response::response(200, &contents, server);
-        }
-
-        if !load_success || !has_find_server {
+        // 防盗链校验
+        if !file_safe::check_source_full_path_safe(&server, &file_path) {
             let (contents, code) = response::load_other_html(404, server);
-            print::println(
-                &format!("{}:{}", &RESOURCE_LOAD_FAIL, &file_path),
-                &RED,
-                server,
-            );
-            res_response = response::response(code, &contents, server);
+            is_safe_request = false;
         }
+
+        // 获取结果
+        let res_response: Vec<u8> = response::get_res_response(
+            &server,
+            &http_request,
+            buffer_size,
+            is_safe_request,
+            &file_path,
+        );
+
+        // 响应结果
         stream.write(&res_response).unwrap();
         stream.flush().unwrap();
     }
