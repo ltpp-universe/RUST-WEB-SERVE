@@ -41,9 +41,9 @@
                         "Content-Encoding: gzip"
                     ],
                     "proxy": [
-                        "http://www.ltpp.vip:60005/visit/add?origin=proxy1",
-                        "http://www.ltpp.vip:60005/visit/add?origin=proxy2",
-                        "http://www.ltpp.vip:60005/visit/add?origin=proxy3"
+                        "https://api.ltpp.vip",
+                        "https://api.ltpp.vip/Version/getVersion",
+                        "https://api.ltpp.vip/Version/getVersion?origin=proxy1"
                     ],
                     "proxy_timeout_seconds": 10,
                     "hotlink_protection": []
@@ -71,9 +71,7 @@
                         "Content-Encoding: gzip"
                     ],
                     "proxy": [
-                        "http://www.ltpp.vip:60005/visit/add?origin=proxy1",
-                        "http://www.ltpp.vip:60005/visit/add?origin=proxy2",
-                        "http://www.ltpp.vip:60005/visit/add?origin="
+                        "https://api.ltpp.vip/Version/getVersion?origin=proxy1"
                     ],
                     "proxy_timeout_seconds": 10,
                     "hotlink_protection": [
