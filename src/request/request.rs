@@ -1,20 +1,16 @@
 use crate::config::config::{Config, Server};
 use crate::file_safe::file_safe;
 use crate::global::global::{
-    BINDING, GET, GET_CONFIG_FAIL, HOST, LISTENING, NOT_FOUND_TEXT, NOT_PROXY, REFERER,
-    RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
+    BINDING, FAILED_TO_LOCK_THE_LISTENER, GET_CONFIG_FAIL, HOST, HTTP_HTTPS_REGEX, LISTENING,
+    NOT_PROXY,
 };
-use crate::http::{self, request::HttpRequest, response};
+use crate::http::{request::HttpRequest, response};
 use crate::print::print::{self, RED, YELLOW};
-use crate::proxy;
-use crate::utils::file;
 use rand::Rng;
 use regex::Regex;
-use std::error::Error;
-
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::{
-    borrow, fs,
+    borrow,
     io::prelude::{Read, Write},
     net, path, str,
     sync::{Arc, Mutex},
@@ -47,8 +43,8 @@ impl Request {
             for (one_server_key, one_server_value) in &one_config.bind_server_name {
                 match port_server_list.get_mut(&one_config.listen_port) {
                     Some(http_server) => match http_server.get(one_server_key) {
-                        Some(mut tem_http_server) => {
-                            tem_http_server = &mut one_server_value.clone();
+                        Some(mut _tem_http_server) => {
+                            _tem_http_server = &mut one_server_value.clone();
                         }
                         None => {
                             http_server.insert(one_server_key.clone(), one_server_value.clone());
@@ -70,10 +66,9 @@ impl Request {
         }
         for one_config in &config.server {
             let port: usize = one_config.listen_port;
-            let buffer_size: usize = one_config.buffer_size;
-            for (one_server_key, one_server_value) in &one_config.bind_server_name {
+            for (_one_server_key, one_server_value) in &one_config.bind_server_name {
                 match port_map_listener.get(&port) {
-                    Some(has_use_port) => {
+                    Some(_has_use_port) => {
                         continue;
                     }
                     _ => {}
@@ -88,7 +83,7 @@ impl Request {
                     &one_server_value,
                 );
                 for one_bind_server in config.server.clone() {
-                    for (one_bind_server_key, one_bind_server_value) in
+                    for (one_bind_server_key, _one_bind_server_value) in
                         one_bind_server.bind_server_name
                     {
                         print::println(
@@ -102,28 +97,37 @@ impl Request {
                 let one_config_clone: Server = one_server_value.clone();
                 let port_map_listener_clone: HashMap<usize, Arc<Mutex<net::TcpListener>>> =
                     port_map_listener.clone();
-                // K->域名 | V->Server
+                // K -> 域名 | V -> Server
                 let server_map_list: HashMap<String, Server> = match port_server_list.get(&port) {
                     Some(tem_server_list) => tem_server_list.clone(),
                     _ => HashMap::new(),
                 };
                 let handle: thread::JoinHandle<()> = thread::spawn(move || {
                     use std::sync::MutexGuard;
-                    let mut listener: MutexGuard<net::TcpListener> = listener_clone.lock().unwrap();
+                    let listener: MutexGuard<net::TcpListener> = match listener_clone.lock() {
+                        Ok(guard) => guard,
+                        Err(err) => {
+                            print::println(
+                                &format!("{} => {:?}", FAILED_TO_LOCK_THE_LISTENER, err),
+                                RED,
+                                &one_config_clone.clone(),
+                            );
+                            return;
+                        }
+                    };
                     for stream in listener.incoming() {
-                        let stream: net::TcpStream = stream.unwrap();
-                        let copy_one_config: Server = one_config_clone.clone();
-                        let port_map_listener_clone: HashMap<usize, Arc<Mutex<net::TcpListener>>> =
+                        let stream: net::TcpStream = match stream {
+                            Ok(stream) => stream,
+                            Err(_) => {
+                                continue;
+                            }
+                        };
+                        let _port_map_listener_clone: HashMap<usize, Arc<Mutex<net::TcpListener>>> =
                             port_map_listener_clone.clone();
                         let server_map_list_clone: HashMap<String, Server> =
                             server_map_list.clone();
                         thread::spawn(move || {
-                            Request::handle_connection(
-                                stream,
-                                port,
-                                buffer_size,
-                                server_map_list_clone,
-                            );
+                            Request::handle_connection(stream, server_map_list_clone);
                         });
                     }
                 });
@@ -169,7 +173,7 @@ impl Request {
             return *NOT_PROXY;
         }
         let mut safe_proxy_list: Vec<String> = vec![];
-        let https_regex: Regex = Regex::new(r"^https?://[^\s/$.?#].[^\s]*$").unwrap();
+        let https_regex: Regex = Regex::new(HTTP_HTTPS_REGEX).unwrap();
         for tem in &server.proxy {
             if https_regex.is_match(tem) {
                 safe_proxy_list.push(tem.clone());
@@ -187,16 +191,11 @@ impl Request {
     /**
      * 处理请求
      */
-    fn handle_connection(
-        mut stream: net::TcpStream,
-        port: usize,
-        buffer_size: usize,
-        server_map: HashMap<String, Server>,
-    ) {
+    fn handle_connection(mut stream: net::TcpStream, server_map: HashMap<String, Server>) {
         // 是否找到请求来源域名/IP对应配置，只允许绑定的域名/IP访问，只允许防盗链以外的安全的访问
         let mut is_safe_request: bool = false;
         let mut server: &Server = &Config::get_default_server();
-        let mut buffer: Vec<u8> = vec![0; buffer_size];
+        let mut buffer: Vec<u8> = vec![0; server.buffer_size];
         stream.read(&mut buffer).unwrap();
         let request: borrow::Cow<str> = String::from_utf8_lossy(&buffer[..]);
         let res: Option<HttpRequest> = HttpRequest::parse_http_request(server, &request);
@@ -217,18 +216,13 @@ impl Request {
 
         // 防盗链校验
         if !file_safe::check_source_full_path_safe(&server, &file_path) {
-            let (contents, code) = response::load_other_html(404, server);
+            let (_contents, _code) = response::load_other_html(404, server);
             is_safe_request = false;
         }
 
         // 获取结果
-        let res_response: Vec<u8> = response::get_res_response(
-            &server,
-            &http_request,
-            buffer_size,
-            is_safe_request,
-            &file_path,
-        );
+        let res_response: Vec<u8> =
+            response::get_res_response(&server, &http_request, is_safe_request, &file_path);
 
         // 响应结果
         stream.write(&res_response).unwrap();

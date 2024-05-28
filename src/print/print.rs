@@ -25,7 +25,12 @@ fn base_print<T: fmt::Display + fmt::Debug>(str: &T, color: &str, server: &Serve
         .expect(GET_TIME_FAIL);
     let now: String = time::format_now_time();
     let print_mutex: sync::Mutex<()> = PRINTLN_MUTEX;
-    let lock: sync::MutexGuard<()> = print_mutex.lock().unwrap();
+    let mut lock: sync::MutexGuard<()> = match print_mutex.lock() {
+        Ok(tem_lock) => tem_lock,
+        _ => {
+            return;
+        }
+    };
     if has_br {
         print_msg = format!("{}[{}]\n{}{}{}{}\n", GREEN, now, END, color, *str, END);
         log_msg = format!("[{}]\n{}\n", now, *str);

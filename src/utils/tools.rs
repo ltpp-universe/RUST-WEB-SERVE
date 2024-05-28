@@ -3,7 +3,7 @@ use std::default::Default;
 use std::hash::Hash;
 
 /**
- * HashMap转String
+ * HashMap<String,String>转String
  */
 pub fn hash_map_to_string(hash_map: &HashMap<String, String>, br: &str) -> String {
     let mut result = String::new();
@@ -44,23 +44,20 @@ pub fn parse_string_array_to_hashmap(arr: &Vec<String>) -> HashMap<String, Strin
 pub fn vec_u8_to_string(vec: &Vec<u8>) -> String {
     match String::from_utf8(vec.clone()) {
         Ok(s) => s,
-        Err(e) => "".to_owned(),
+        Err(_) => "".to_owned(),
     }
 }
 
 /**
  * 获取HashMap某个value
  */
-pub fn get_hash_map_one_value<T_KEY, T_VALUE>(
-    hash_map: &HashMap<T_KEY, T_VALUE>,
-    key: &T_KEY,
-) -> T_VALUE
+pub fn get_hash_map_one_value<TKEY, TVALUE>(hash_map: &HashMap<TKEY, TVALUE>, key: &TKEY) -> TVALUE
 where
-    T_KEY: Eq + PartialEq + Hash,
-    T_VALUE: Default + Clone,
+    TKEY: Eq + PartialEq + Hash,
+    TVALUE: Default + Clone,
 {
     match hash_map.get(key) {
         Some(value) => value.clone(),
-        None => T_VALUE::default(),
+        None => TVALUE::default(),
     }
 }

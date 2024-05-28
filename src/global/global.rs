@@ -30,16 +30,18 @@ pub const COOKIE: &'static str = "cookie";
 pub const GZIP: &'static str = "gzip";
 pub const BINDING: &'static str = "Binding";
 pub const LISTENING: &'static str = "Listening";
+pub const TEXT_HTML: &'static str = "text/html";
+pub const HTTP_HTTPS_REGEX: &'static str = r"^https?://[^\s/$.?#].[^\s]*$";
+
 // 配置
 pub const DEFAULT_LISTEN_IP: &'static str = &"0.0.0.0";
 pub const LOCAL_LISTEN_IP: &'static str = &"127.0.0.1";
 pub const LOCALHOST_LISTEN_IP: &'static str = &"localhost";
 pub const DEFAULT_LISTEN_PORT: &'static usize = &80;
 pub const DEFAULT_BUFFER_SIZE: &'static usize = &10240;
+pub const DEFAULT_GZIP_LEVEL: &'static usize = &5;
 pub const DEFAULT_ROOT_PATH: &'static str = &"./";
 pub const DEFAULT_LOG_DIR_PATH: &'static str = &"./logs";
-pub const DEFAULT_SSL_CERTIFICATE_PATH: &'static str = &"./ssl/certificate.crt";
-pub const DEFAULT_SSL_CERTIFICATE_KEY_PATH: &'static str = &"./ssl/certificate.key";
 pub const DEFAULT_SERVER_NAME: &'static str = DEFAULT_LISTEN_IP;
 pub const DEFAULT_EMPTY_PATH_TRY_FILES_PATH: &'static str = &"./index.html";
 pub const DEFAULT_RESPONSE_HEADER: &'static str = &"Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Credentials: true\r\nConnection: keep-alive\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nServer: RUST-WEB-SERVER";
@@ -49,6 +51,7 @@ pub const DEFAULT_HOTLINK_PROTECTION: &'static str = &"";
 // 日志
 pub const PROXY_URL_INFO: &'static str = "Proxy url info";
 pub const REQUEST_RESPONSE_INFO: &'static str = "Request response info";
+pub const REQUEST_QUERY_INFO: &'static str = "Request query info";
 // 成功
 pub const RESOURCE_LOAD_SUCCESS: &'static str = "Resource load success";
 pub const CONFIG_PATH: &'static str = "config.json";
@@ -66,6 +69,9 @@ pub const OPEN_LOG_FILE_FAILED: &'static str = "Failed to open log file";
 pub const WRITE_LOG_FILE_FAILED: &'static str = "Failed to write to log file";
 pub const PROXY_FAILED: &'static str = "Failed to proxy";
 pub const PARSE_RESPONSE_HEADER_FAILED: &'static str = "Failed to parse response header";
+pub const FAILED_TO_LOCK_THE_LISTENER: &'static str = "Failed to lock the listener";
+pub const FAILED_TO_CREATE_DEFAULT_SSL_SERVERCONFIG: &'static str =
+    "Failed to create default ssl serverconfig";
 // 错误页
 pub const DEFAULT_ERROR_HTML:&'static str = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>{}</title><style>body{display:flex;justify-content:center}</style></head><body><h1>{}</h1></body></html>";
 // 100

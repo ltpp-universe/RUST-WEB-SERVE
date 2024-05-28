@@ -3,13 +3,12 @@
         {
             "listen_ip": "0.0.0.0",
             "listen_port": 80,
-            "buffer_size": 10240,
             "bind_server_name": {
                 "127.0.0.1": {
                     "root_path": "./",
+                    "buffer_size": 10240,
+                    "gzip_level": 1,
                     "log_dir_path": "./logs",
-                    "ssl_certificate_path": "./ssl/certificate.crt",
-                    "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
                     "response_header_list": [
                         "Server: RUST-WEB-SERVER",
@@ -27,9 +26,9 @@
                 },
                 "localhost": {
                     "root_path": "./",
+                    "buffer_size": 10240,
+                    "gzip_level": 1,
                     "log_dir_path": "./logs",
-                    "ssl_certificate_path": "./ssl/certificate.crt",
-                    "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
                     "response_header_list": [
                         "Server: RUST-WEB-SERVER",
@@ -54,13 +53,12 @@
         {
             "listen_ip": "0.0.0.0",
             "listen_port": 81,
-            "buffer_size": 10240,
             "bind_server_name": {
                 "127.0.0.1": {
                     "root_path": "./",
+                    "buffer_size": 10240,
+                    "gzip_level": 1,
                     "log_dir_path": "./logs",
-                    "ssl_certificate_path": "./ssl/certificate.crt",
-                    "ssl_certificate_key_path": "./ssl/certificate.key",
                     "empty_path_try_files_path": "./index.html",
                     "response_header_list": [
                         "Access-Control-Allow-Origin: *",

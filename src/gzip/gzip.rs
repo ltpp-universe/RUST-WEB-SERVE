@@ -7,11 +7,16 @@ use std::io::prelude::*;
 /**
  * 使用gzip编码
  */
-pub fn encoder(data: &Vec<u8>) -> Vec<u8> {
-    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-    encoder.write_all(data).unwrap();
-    let compressed_data: Vec<u8> = encoder.finish().unwrap();
-    return compressed_data;
+pub fn encoder(data: &Vec<u8>, level: u32) -> Vec<u8> {
+    let mut encoder: GzEncoder<Vec<u8>> = GzEncoder::new(Vec::new(), Compression::new(level));
+    match encoder.write_all(data) {
+        Ok(_) => {}
+        _ => {}
+    }
+    match encoder.finish() {
+        Ok(compressed_data) => compressed_data,
+        _ => data.to_vec(),
+    }
 }
 
 /**

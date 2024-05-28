@@ -1,6 +1,6 @@
 use crate::config::config::Server;
 use crate::global::global::{DANGER_PATH, HOTLINK_PROTECTION_MATCH_MSG, RESOURCE_LOAD_FAIL};
-use crate::print::print::{self, GREEN, RED};
+use crate::print::print::{self, RED};
 use regex::Regex;
 
 /**
@@ -14,18 +14,25 @@ pub fn check_source_full_path_safe(server: &Server, source_path: &str) -> bool {
     // 防盗链
     let hotlink_protection: Vec<String> = server.hotlink_protection.clone();
     for one_hotlink_protection in hotlink_protection {
-        let https_regex: Regex = Regex::new(&one_hotlink_protection).unwrap();
-        if https_regex.is_match(&source_path) {
-            print::println(
-                &format!(
-                    "{} => {}\nError => {}",
-                    &RESOURCE_LOAD_FAIL, &source_path, HOTLINK_PROTECTION_MATCH_MSG
-                ),
-                RED,
-                server,
-            );
-            return false;
-        }
+        match Regex::new(&one_hotlink_protection) {
+            Ok(https_regex) => {
+                if https_regex.is_match(&source_path) {
+                    print::println(
+                        &format!(
+                            "{} => {}\nError => {}",
+                            &RESOURCE_LOAD_FAIL, &source_path, HOTLINK_PROTECTION_MATCH_MSG
+                        ),
+                        RED,
+                        server,
+                    );
+                    return true;
+                }
+                continue;
+            }
+            _ => {
+                return true;
+            }
+        };
     }
     return true;
 }

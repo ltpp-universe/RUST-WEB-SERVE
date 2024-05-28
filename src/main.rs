@@ -8,7 +8,6 @@ mod log;
 mod print;
 mod proxy;
 mod request;
-mod ssl;
 mod template;
 mod utils;
 use request::request::Request;

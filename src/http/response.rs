@@ -1,9 +1,7 @@
-use http::header;
-
 use crate::config::config::{Config, Server};
 use crate::global::global::{
-    ACCEPTED_TEXT, ACCEPT_ENCODING, APP_NAME, BAD_GATEWAY_TEXT, BAD_REQUEST_TEXT, CONTENT_ENCODING,
-    CONTENT_LENGTH, CONTINUE_TEXT, CREATED_TEXT, FORBIDDEN_TEXT, FOUND_TEXT, GZIP,
+    ACCEPTED_TEXT, BAD_GATEWAY_TEXT, BAD_REQUEST_TEXT, CONTENT_ENCODING, CONTENT_LENGTH,
+    CONTENT_TYPE, CONTINUE_TEXT, CREATED_TEXT, FORBIDDEN_TEXT, FOUND_TEXT, GZIP,
     INTERNAL_SERVER_ERROR_TEXT, METHOD_NOT_ALLOWED_TEXT, MOVED_PERMANENTLY_TEXT, NOT_FOUND_TEXT,
     NOT_IMPLEMENTED_TEXT, NOT_MODIFIED_TEXT, NOT_PROXY, NO_CONTENT_TEXT, OK_TEXT, PROXY_FAILED,
     REQUEST_RESPONSE_INFO, REQUEST_TIMEOUT_TEXT, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
@@ -15,7 +13,6 @@ use crate::http::request::HttpRequest;
 use crate::print::print::{self, BLUE, GREEN, RED};
 use crate::proxy;
 use crate::request::request::Request;
-use crate::ssl::ssl;
 use crate::template::template;
 use crate::utils::{file, tools};
 use std::collections::HashMap;
@@ -86,7 +83,6 @@ pub fn get_code_msg(code: usize) -> String {
 pub fn get_res_response(
     server: &Server,
     http_request: &HttpRequest,
-    buffer_size: usize,
     is_safe_request: bool,
     file_path: &str,
 ) -> Vec<u8> {
@@ -106,19 +102,14 @@ pub fn get_res_response(
                 );
             }
         } else {
-            match proxy::proxy::send_sync_request(
-                &server,
-                &http_request,
-                buffer_size,
-                proxy_index as usize,
-            ) {
+            match proxy::proxy::send_sync_request(&server, &http_request, proxy_index as usize) {
                 Ok((header, body)) => {
                     response_header = header;
                     response_content = body;
                 }
                 Err(err) => {
                     print::println(
-                        &format!("{} => {}", &PROXY_FAILED, &http_request),
+                        &format!("{} => {:?} => {:?}", &PROXY_FAILED, &http_request, err),
                         RED,
                         server,
                     );
@@ -128,6 +119,7 @@ pub fn get_res_response(
         }
         res_response = edit_response(
             server,
+            file_path,
             http_request,
             200,
             &response_header,
@@ -142,7 +134,14 @@ pub fn get_res_response(
             RED,
             server,
         );
-        res_response = edit_response(server, http_request, code, &response_header, &contents);
+        res_response = edit_response(
+            server,
+            file_path,
+            http_request,
+            code,
+            &response_header,
+            &contents,
+        );
     }
     res_response
 }
@@ -159,14 +158,13 @@ fn get_http_response_protocol_head(code: usize) -> String {
  */
 pub fn edit_response(
     server: &Server,
+    file_path: &str,
     http_request: &HttpRequest,
     code: usize,
     response_header: &HashMap<String, String>,
     response_content: &Vec<u8>,
 ) -> Vec<u8> {
     let response_header_clone: HashMap<String, String> = response_header.clone();
-    let mut res_response: Vec<u8> = vec![];
-    let (ssl_certificate, ssl_certificate_key) = ssl::get_ssl(server);
     // 响应头避免大小写导致重复添加，均转小写
     let mut header: HashMap<String, String> =
         tools::parse_string_array_to_hashmap(&server.response_header_list)
@@ -189,16 +187,24 @@ pub fn edit_response(
         is_need_open_gzip = false;
     }
 
-    // 不需要gzip去除响应头CONTENT_ENCODING
+    // 资源不需要gzip去除响应头CONTENT_ENCODING
     if !is_need_open_gzip {
         header.remove(&CONTENT_ENCODING.to_lowercase());
     }
+
+    // 本地资源更新响应头CONTENT_TYPE
+    let is_local_file_request: bool = response_header_clone.len() == 0;
+    if is_local_file_request {
+        header.insert(CONTENT_TYPE.to_owned(), file::get_content_type(file_path));
+    }
+
     let response_header_str: String = tools::hash_map_to_string(&header, RESPONSE_HEADER_BR);
 
     let mut res_content: Vec<u8> = response_content.to_vec();
     if is_need_open_gzip {
-        res_content = gzip::encoder(&response_content);
+        res_content = gzip::encoder(&response_content, server.gzip_level as u32);
     }
+
     // 最终结果字符串
     let res_response_header_str: String = format!(
         "{}{}{}: {}{}{}{}{}",
@@ -211,17 +217,20 @@ pub fn edit_response(
         RESPONSE_HEADER_BR,
         RESPONSE_HEADER_BR,
     );
-    res_response = res_response_header_str.clone().into_bytes();
+    let mut res_response: Vec<u8> = res_response_header_str.clone().into_bytes();
     res_response.extend(res_content);
-    print::println(
-        &format!(
-            "{}:\n{}\n{}",
-            REQUEST_RESPONSE_INFO,
-            res_response_header_str,
-            tools::vec_u8_to_string(response_content)
-        ),
-        BLUE,
-        server,
-    );
+    if !is_local_file_request {
+        print::println(
+            &format!(
+                "{}:\n{}\n{}",
+                REQUEST_RESPONSE_INFO,
+                res_response_header_str,
+                tools::vec_u8_to_string(response_content)
+            ),
+            BLUE,
+            server,
+        );
+    }
+
     res_response
 }

@@ -1,26 +1,23 @@
 use crate::config::config::Server;
 use crate::file_safe::file_safe;
 use crate::global::global::{
-    DEFAULT_HTTP_PORT, DELETE, GET, HOST, NOT_FOUND_TEXT, PARSE_RESPONSE_HEADER_FAILED, POST,
-    PROXY_FAILED, PROXY_SUCCESS, PROXY_URL_INFO, PUT,
+    DEFAULT_HTTP_PORT, DELETE, GET, HOST, PARSE_RESPONSE_HEADER_FAILED, POST, PROXY_FAILED,
+    PROXY_URL_INFO, PUT, REQUEST_QUERY_INFO,
 };
-use crate::http::request::{HttpBase, HttpRequest};
+use crate::http::request::HttpRequest;
 use crate::http::response;
-use crate::print::print::{self, GREEN, RED, YELLOW};
-use http::{header, Uri};
+use crate::print::print::{self, RED, YELLOW};
+use http::Uri;
 use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
 
-use crate::utils::tools;
 use reqwest::{
     blocking::{Client, Response},
-    header::{HeaderMap, HeaderValue, CONTENT_TYPE},
-    Error as ReqwestError, RequestBuilder,
+    header::{HeaderMap, CONTENT_TYPE},
+    Error as ReqwestError,
 };
 use std::collections::HashMap;
 use std::error::Error;
-use std::io::{Read, Write};
-use std::net::TcpStream;
-
+use std::io::Read;
 /**
  * 发送请求
  */
@@ -39,7 +36,7 @@ fn send_request(
         GET => {
             request_builder = client.get(proxy_url);
             print::println(
-                &format!("{}:\n{}", PROXY_URL_INFO, proxy_url),
+                &format!("{} => {}", PROXY_URL_INFO, proxy_url),
                 YELLOW,
                 server,
             );
@@ -50,7 +47,10 @@ fn send_request(
                 .body(query_str.clone())
                 .header(CONTENT_TYPE, "application/x-www-form-urlencoded");
             print::println(
-                &format!("{}:\n{}\n{}", PROXY_URL_INFO, &url, &query_str),
+                &format!(
+                    "{} => {}\n{} => {}",
+                    PROXY_URL_INFO, &url, REQUEST_QUERY_INFO, &query_str
+                ),
                 YELLOW,
                 server,
             );
@@ -61,7 +61,7 @@ fn send_request(
         _ => {
             request_builder = client.get(proxy_url);
             print::println(
-                &format!("{}:\n{}", PROXY_URL_INFO, proxy_url),
+                &format!("{} => {}", PROXY_URL_INFO, proxy_url),
                 YELLOW,
                 server,
             );
@@ -94,7 +94,7 @@ fn convert_headers_to_hashmap(server: &Server, headers: &HeaderMap) -> HashMap<S
             }
             Err(err) => {
                 print::println(
-                    &format!("{}:\n{}", PARSE_RESPONSE_HEADER_FAILED, err),
+                    &format!("{} => {:?}", PARSE_RESPONSE_HEADER_FAILED, err),
                     RED,
                     server,
                 );
@@ -130,10 +130,8 @@ fn generate_query_string(data: &[(String, String)]) -> Result<String, ReqwestErr
 pub fn send_sync_request(
     server: &Server,
     request: &HttpRequest,
-    buffer_size: usize,
     proxy_index: usize,
 ) -> Result<(HashMap<String, String>, Vec<u8>), Box<dyn Error>> {
-    let mut response: Vec<u8> = vec![];
     let mut request_header: HashMap<String, String> = request.headers.clone();
     let method: String = request.method.clone();
     let url: String = format!(
@@ -154,7 +152,7 @@ pub fn send_sync_request(
     let query_str: String = generate_query_string(&query)?;
     let proxy_url: String = format!("{}?{}", url, query_str);
     if !file_safe::check_source_full_path_safe(&server, &proxy_url) {
-        let (contents, code) = response::load_other_html(404, server);
+        let (contents, _code) = response::load_other_html(404, server);
         return Ok((HashMap::new(), contents));
     }
 
@@ -162,7 +160,7 @@ pub fn send_sync_request(
     let uri: Uri = match Uri::try_from(url.clone()) {
         Ok(uri) => uri,
         Err(e) => {
-            print::println(&format!("{}:\n{}", &PROXY_FAILED, &e), RED, server);
+            print::println(&format!("{} => {:?}", &PROXY_FAILED, &e), RED, server);
             return Err(e.into());
         }
     };
@@ -194,7 +192,7 @@ pub fn send_sync_request(
             response_content = tem_response_content.clone();
             response_header = tem_response_header.clone();
         }
-        Err(e) => print::println(&PROXY_FAILED, RED, server),
+        Err(err) => print::println(&format!("{} => {:?}", &PROXY_FAILED, err), RED, server),
     }
 
     Ok((response_header, response_content))

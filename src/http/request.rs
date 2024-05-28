@@ -1,11 +1,9 @@
 use crate::config::config::Server;
 use crate::global::global::{DEFAULT_METHOD, HOST, INVALID_HOST, INVALID_URL};
 use crate::log::log;
-use crate::print::print::{self, BLUE};
 use std::collections::HashMap;
 use std::{
     fmt,
-    ptr::hash,
     str::{Split, SplitWhitespace},
 };
 use url::Url;
@@ -254,8 +252,6 @@ impl HttpRequest {
             // 检查是否有 Host 头
             match http_request.headers.get(&HOST.to_lowercase()) {
                 Some(http_host) => {
-                    // 如果有 Host 头，复制它
-                    let request_host = http_host.clone();
                     // 返回 http_request
                     http_request
                 }
