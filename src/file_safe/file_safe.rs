@@ -21,7 +21,7 @@ pub fn check_source_full_path_safe(server: &Server, source_path: &str) -> bool {
                     "{} => {}\nError => {}",
                     &RESOURCE_LOAD_FAIL, &source_path, HOTLINK_PROTECTION_MATCH_MSG
                 ),
-                &RED,
+                RED,
                 server,
             );
             return false;

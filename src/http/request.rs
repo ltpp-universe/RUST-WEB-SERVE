@@ -36,14 +36,23 @@ impl fmt::Display for HttpRequest {
         let mut body_str: String = String::new();
         for (key, values) in &self.body {
             for value in values {
-                body_str.push_str(&format!("{}: {}\n", key, value));
+                body_str.push_str(&format!("{} => {}\n", key, value));
             }
+        }
+
+        let mut query_str: String = String::new();
+        for (key, values) in &self.query {
+            query_str.push_str(&format!("{}:{} ", key, values));
         }
 
         write!(
             f,
-            "method: {}\npath: {}\nheaders:\n{}\nbody:\n{}",
-            self.method, self.path, headers_str, body_str
+            "method: {}\npath: {}\nquery: {}\nheaders:\n{}\nbody:\n{}",
+            self.method,
+            self.path,
+            query_str.trim_end(),
+            headers_str,
+            body_str
         )
     }
 }
@@ -52,7 +61,7 @@ impl HttpRequest {
     /**
      * 解析HTTP请求
      */
-    pub fn parse_http_request(request_str: &str, server: &Server) -> Option<HttpRequest> {
+    pub fn parse_http_request(server: &Server, request_str: &str) -> Option<HttpRequest> {
         let mut lines: Split<char> = request_str.split('\n');
         if let Some(request_line) = lines.next() {
             let mut parts: SplitWhitespace = request_line.split_whitespace();
@@ -62,7 +71,7 @@ impl HttpRequest {
             let mut body: HashMap<String, Vec<String>> = HashMap::new();
             for line in lines.clone() {
                 if let Some(pos) = line.find(":") {
-                    let key: String = line[..pos].trim().to_owned();
+                    let key: String = line[..pos].trim().to_owned().to_lowercase();
                     let value: String = line[pos + 1..].trim().to_owned();
                     headers.insert(key.clone(), value.clone());
                     body.entry(key).or_insert_with(Vec::new).push(value);
@@ -77,7 +86,7 @@ impl HttpRequest {
                 body,
                 query,
             };
-            log::write_no_print(&res_request, server);
+            log::write_no_print(server, &res_request);
             Some(res_request)
         } else {
             None
@@ -243,11 +252,11 @@ impl HttpRequest {
         if let Some(mut http_request) = res {
             let request_path = http_request.path.clone();
             // 检查是否有 Host 头
-            match http_request.headers.get(HOST) {
+            match http_request.headers.get(&HOST.to_lowercase()) {
                 Some(http_host) => {
                     // 如果有 Host 头，复制它
                     let request_host = http_host.clone();
-                    // 返回 http_request 的引用
+                    // 返回 http_request
                     http_request
                 }
                 None => {

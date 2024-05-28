@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::default::Default;
+use std::hash::Hash;
 
 /**
  * HashMap转String
@@ -43,5 +45,22 @@ pub fn vec_u8_to_string(vec: &Vec<u8>) -> String {
     match String::from_utf8(vec.clone()) {
         Ok(s) => s,
         Err(e) => "".to_owned(),
+    }
+}
+
+/**
+ * 获取HashMap某个value
+ */
+pub fn get_hash_map_one_value<T_KEY, T_VALUE>(
+    hash_map: &HashMap<T_KEY, T_VALUE>,
+    key: &T_KEY,
+) -> T_VALUE
+where
+    T_KEY: Eq + PartialEq + Hash,
+    T_VALUE: Default + Clone,
+{
+    match hash_map.get(key) {
+        Some(value) => value.clone(),
+        None => T_VALUE::default(),
     }
 }

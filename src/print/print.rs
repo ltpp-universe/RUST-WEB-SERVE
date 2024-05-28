@@ -35,7 +35,7 @@ fn base_print<T: fmt::Display + fmt::Debug>(str: &T, color: &str, server: &Serve
     }
     print!("{}", print_msg);
     drop(lock);
-    log::write(&log_msg, server);
+    log::write(server, &log_msg);
 }
 
 pub fn print<T: fmt::Display + fmt::Debug>(str: &T, color: &str, server: &Server) {

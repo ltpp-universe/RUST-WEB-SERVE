@@ -1,4 +1,5 @@
-use crate::global::global::{ACCEPT_ENCODING, GZIP};
+use crate::global::global::{ACCEPT_ENCODING, CONTENT_ENCODING, GZIP};
+use crate::utils::tools;
 use flate2::{write::GzEncoder, Compression};
 use std::collections::HashMap;
 use std::io::prelude::*;
@@ -16,12 +17,22 @@ pub fn encoder(data: &Vec<u8>) -> Vec<u8> {
 /**
  * 判断是否需要开启gzip
  */
-pub fn judge_need_open_gzip(header: &HashMap<String, String>) -> bool {
-    match header.get(&ACCEPT_ENCODING.to_lowercase()) {
-        Some(value) => {
-            let lower_value = value.to_lowercase();
-            lower_value.contains(&GZIP.to_lowercase())
-        }
-        _ => false,
+pub fn judge_need_open_gzip(
+    client_header: &HashMap<String, String>,
+    server_header: &HashMap<String, String>,
+) -> bool {
+    let client_encoding_value: String =
+        tools::get_hash_map_one_value(&client_header, &ACCEPT_ENCODING.to_lowercase());
+    let server_encoding_value: String =
+        tools::get_hash_map_one_value(&server_header, &CONTENT_ENCODING.to_lowercase());
+    let client_encoding_open: bool = client_encoding_value
+        .to_lowercase()
+        .contains(&GZIP.to_lowercase());
+    let server_encoding_open: bool = server_encoding_value
+        .to_lowercase()
+        .contains(&GZIP.to_lowercase());
+    if client_encoding_open && server_encoding_open {
+        return true;
     }
+    return false;
 }

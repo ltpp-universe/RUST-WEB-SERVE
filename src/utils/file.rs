@@ -24,7 +24,7 @@ pub fn judge_creat_dir(dir_path: &str) -> bool {
     res
 }
 
-pub fn get_file_data(file_path: &str, server: &Server) -> Option<Vec<u8>> {
+pub fn get_file_data(server: &Server, file_path: &str) -> Option<Vec<u8>> {
     let mut contents_result: io::Result<Vec<u8>> = Ok(vec![]);
     if let Ok(metadata) = fs::metadata(&file_path) {
         if metadata.is_file() {
@@ -33,7 +33,7 @@ pub fn get_file_data(file_path: &str, server: &Server) -> Option<Vec<u8>> {
                 Ok(contents) => {
                     print::println(
                         &format!("{} => {}", &RESOURCE_LOAD_SUCCESS, &file_path),
-                        &GREEN,
+                        GREEN,
                         server,
                     );
                     return Some(contents);
@@ -44,7 +44,7 @@ pub fn get_file_data(file_path: &str, server: &Server) -> Option<Vec<u8>> {
                             "{} => {}\nError => {}",
                             &RESOURCE_LOAD_FAIL, &file_path, err
                         ),
-                        &RED,
+                        RED,
                         server,
                     );
                 }

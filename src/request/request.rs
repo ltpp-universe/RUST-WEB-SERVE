@@ -84,7 +84,7 @@ impl Request {
                 port_map_listener.insert(port, Arc::clone(&listener_arc));
                 print::println(
                     &format!("{} => {}:{}", LISTENING, one_config.listen_ip, port),
-                    &YELLOW,
+                    YELLOW,
                     &one_server_value,
                 );
                 for one_bind_server in config.server.clone() {
@@ -93,7 +93,7 @@ impl Request {
                     {
                         print::println(
                             &format!("{} => {}:{}", BINDING, one_bind_server_key, port),
-                            &YELLOW,
+                            YELLOW,
                             &one_server_value,
                         );
                     }
@@ -199,10 +199,11 @@ impl Request {
         let mut buffer: Vec<u8> = vec![0; buffer_size];
         stream.read(&mut buffer).unwrap();
         let request: borrow::Cow<str> = String::from_utf8_lossy(&buffer[..]);
-        let res: Option<HttpRequest> = HttpRequest::parse_http_request(&request, server);
+        let res: Option<HttpRequest> = HttpRequest::parse_http_request(server, &request);
         let http_request: HttpRequest = HttpRequest::process_request(res.clone());
         let request_path: String = http_request.path.clone();
-        match http_request.headers.get(HOST) {
+
+        match http_request.headers.get(&HOST.to_lowercase()) {
             Some(host) => match server_map.get(host) {
                 Some(tem_server) => {
                     server = tem_server;

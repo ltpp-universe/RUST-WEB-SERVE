@@ -69,12 +69,13 @@
                         "Access-Control-Allow-Credentials: true",
                         "Server: RUST-WEB-SERVER",
                         "Git: https://git.ltpp.vip/root/RUST-WEB-SERVE.git",
+                        "Content-Type: application/json",
                         "Content-Encoding: gzip"
                     ],
                     "proxy": [
                         "http://www.ltpp.vip:60005/visit/add?origin=proxy1",
                         "http://www.ltpp.vip:60005/visit/add?origin=proxy2",
-                        "http://www.ltpp.vip:60005/visit/add?origin=proxy3"
+                        "http://www.ltpp.vip:60005/visit/add?origin="
                     ],
                     "proxy_timeout_seconds": 10,
                     "hotlink_protection": [

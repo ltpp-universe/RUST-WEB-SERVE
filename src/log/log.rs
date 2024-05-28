@@ -16,19 +16,19 @@ const WRITE_MUTEX: sync::Mutex<()> = sync::Mutex::new(());
 /**
  * 无输出写入
  */
-pub fn write_no_print<T: fmt::Display + fmt::Debug>(log_msg: &T, server: &Server) {
+pub fn write_no_print<T: fmt::Display + fmt::Debug>(server: &Server, log_msg: &T) {
     let now: Duration = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect(GET_TIME_FAIL);
     let now: String = time::format_now_time();
     let log_msg: &String = &format!("[{}]\n{:#?}", now, *log_msg);
-    write(log_msg, server);
+    write(server, log_msg);
 }
 
 /**
  * 写入
  */
-pub fn write(log_msg: &str, server: &Server) {
+pub fn write(server: &Server, log_msg: &str) {
     let write_mutex: sync::Mutex<()> = WRITE_MUTEX;
     let lock: sync::MutexGuard<()> = write_mutex.lock().unwrap();
     let mut log_dir_path: String = server.log_dir_path.clone();

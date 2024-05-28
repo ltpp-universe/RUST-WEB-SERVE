@@ -40,7 +40,7 @@ fn send_request(
             request_builder = client.get(proxy_url);
             print::println(
                 &format!("{}:\n{}", PROXY_URL_INFO, proxy_url),
-                &YELLOW,
+                YELLOW,
                 server,
             );
         }
@@ -51,7 +51,7 @@ fn send_request(
                 .header(CONTENT_TYPE, "application/x-www-form-urlencoded");
             print::println(
                 &format!("{}:\n{}\n{}", PROXY_URL_INFO, &url, &query_str),
-                &YELLOW,
+                YELLOW,
                 server,
             );
         }
@@ -62,7 +62,7 @@ fn send_request(
             request_builder = client.get(proxy_url);
             print::println(
                 &format!("{}:\n{}", PROXY_URL_INFO, proxy_url),
-                &YELLOW,
+                YELLOW,
                 server,
             );
         }
@@ -95,7 +95,7 @@ fn convert_headers_to_hashmap(server: &Server, headers: &HeaderMap) -> HashMap<S
             Err(err) => {
                 print::println(
                     &format!("{}:\n{}", PARSE_RESPONSE_HEADER_FAILED, err),
-                    &RED,
+                    RED,
                     server,
                 );
             }
@@ -162,7 +162,7 @@ pub fn send_sync_request(
     let uri: Uri = match Uri::try_from(url.clone()) {
         Ok(uri) => uri,
         Err(e) => {
-            print::println(&format!("{}:\n{}", &PROXY_FAILED, &e), &RED, server);
+            print::println(&format!("{}:\n{}", &PROXY_FAILED, &e), RED, server);
             return Err(e.into());
         }
     };
@@ -194,7 +194,7 @@ pub fn send_sync_request(
             response_content = tem_response_content.clone();
             response_header = tem_response_header.clone();
         }
-        Err(e) => print::println(&PROXY_FAILED, &RED, server),
+        Err(e) => print::println(&PROXY_FAILED, RED, server),
     }
 
     Ok((response_header, response_content))

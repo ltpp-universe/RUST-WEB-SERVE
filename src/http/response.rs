@@ -2,12 +2,13 @@ use http::header;
 
 use crate::config::config::{Config, Server};
 use crate::global::global::{
-    ACCEPTED_TEXT, APP_NAME, BAD_GATEWAY_TEXT, BAD_REQUEST_TEXT, CONTENT_LENGTH, CONTINUE_TEXT,
-    CREATED_TEXT, FORBIDDEN_TEXT, FOUND_TEXT, INTERNAL_SERVER_ERROR_TEXT, METHOD_NOT_ALLOWED_TEXT,
-    MOVED_PERMANENTLY_TEXT, NOT_FOUND_TEXT, NOT_IMPLEMENTED_TEXT, NOT_MODIFIED_TEXT, NOT_PROXY,
-    NO_CONTENT_TEXT, OK_TEXT, PROXY_FAILED, REQUEST_RESPONSE_INFO, REQUEST_TIMEOUT_TEXT,
-    RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS, RESPONSE_HEADER_BR, SERVICE_UNAVAILABLE_TEXT,
-    SWITCHING_PROTOCOLS_TEXT, UNAUTHORIZED_TEXT, UNKNOWN_STATUS_CODE,
+    ACCEPTED_TEXT, ACCEPT_ENCODING, APP_NAME, BAD_GATEWAY_TEXT, BAD_REQUEST_TEXT, CONTENT_ENCODING,
+    CONTENT_LENGTH, CONTINUE_TEXT, CREATED_TEXT, FORBIDDEN_TEXT, FOUND_TEXT, GZIP,
+    INTERNAL_SERVER_ERROR_TEXT, METHOD_NOT_ALLOWED_TEXT, MOVED_PERMANENTLY_TEXT, NOT_FOUND_TEXT,
+    NOT_IMPLEMENTED_TEXT, NOT_MODIFIED_TEXT, NOT_PROXY, NO_CONTENT_TEXT, OK_TEXT, PROXY_FAILED,
+    REQUEST_RESPONSE_INFO, REQUEST_TIMEOUT_TEXT, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
+    RESPONSE_HEADER_BR, SERVICE_UNAVAILABLE_TEXT, SWITCHING_PROTOCOLS_TEXT, UNAUTHORIZED_TEXT,
+    UNKNOWN_STATUS_CODE,
 };
 use crate::gzip::gzip;
 use crate::http::request::HttpRequest;
@@ -25,7 +26,7 @@ use std::{path, str};
  */
 pub fn load_other_html(code: usize, server: &Server) -> (Vec<u8>, usize) {
     let try_files_path: String = Config::get_full_try_files_path(&server);
-    if let Some(html_res) = file::get_file_data(&try_files_path, server) {
+    if let Some(html_res) = file::get_file_data(server, &try_files_path) {
         return (html_res, 200);
     }
     let mut html: Vec<u8> = template::get_error_html(&format!("{} {}", code, NOT_FOUND_TEXT));
@@ -44,7 +45,7 @@ pub fn load_other_html(code: usize, server: &Server) -> (Vec<u8>, usize) {
         html_file_name.remove(0);
     }
     let file_path: String = format!("{}/{}", root_path, html_file_name);
-    if let Some(html_res) = file::get_file_data(&file_path, server) {
+    if let Some(html_res) = file::get_file_data(server, &file_path) {
         html = html_res;
     }
     (html, code)
@@ -95,12 +96,12 @@ pub fn get_res_response(
     if is_safe_request {
         let proxy_index: i32 = Request::judge_need_proxy(server);
         if proxy_index == *NOT_PROXY {
-            if let Some(html_res) = file::get_file_data(&file_path, server) {
+            if let Some(html_res) = file::get_file_data(server, &file_path) {
                 load_success = true;
                 response_content = html_res;
                 print::println(
                     &format!("{} => {}", &RESOURCE_LOAD_SUCCESS, &file_path),
-                    &GREEN,
+                    GREEN,
                     server,
                 );
             }
@@ -118,24 +119,30 @@ pub fn get_res_response(
                 Err(err) => {
                     print::println(
                         &format!("{} => {}", &PROXY_FAILED, &http_request),
-                        &RED,
+                        RED,
                         server,
                     );
                 }
             };
             load_success = true;
         }
-        res_response = edit_response(200, &response_header, &response_content, server);
+        res_response = edit_response(
+            server,
+            http_request,
+            200,
+            &response_header,
+            &response_content,
+        );
     }
 
     if !load_success || !is_safe_request || res_response.len() == 0 {
         let (contents, code) = load_other_html(404, server);
         print::println(
             &format!("{} => {}", &RESOURCE_LOAD_FAIL, &file_path),
-            &RED,
+            RED,
             server,
         );
-        res_response = edit_response(code, &response_header, &contents, server);
+        res_response = edit_response(server, http_request, code, &response_header, &contents);
     }
     res_response
 }
@@ -151,10 +158,11 @@ fn get_http_response_protocol_head(code: usize) -> String {
  * 整合响应结果信息
  */
 pub fn edit_response(
+    server: &Server,
+    http_request: &HttpRequest,
     code: usize,
     response_header: &HashMap<String, String>,
     response_content: &Vec<u8>,
-    server: &Server,
 ) -> Vec<u8> {
     let response_header_clone: HashMap<String, String> = response_header.clone();
     let mut res_response: Vec<u8> = vec![];
@@ -168,16 +176,31 @@ pub fn edit_response(
     for (key, value) in &response_header_clone {
         header.insert(key.to_lowercase(), value.clone());
     }
+
     // 先去除CONTENT_LENGTH响应头防止重复添加
     header.remove(&CONTENT_LENGTH.to_lowercase());
-    let response_header_str: String = tools::hash_map_to_string(&header, RESPONSE_HEADER_BR);
     // 是否需要开启GZIP
-    let is_need_open_gzip: bool = gzip::judge_need_open_gzip(&header);
+    let mut is_need_open_gzip: bool = gzip::judge_need_open_gzip(&http_request.headers, &header);
+
+    // 如果代理服务器开启了GZIP，此服务器不在GZIP，代理后端响应头透传GZIP响应头，防止二次GZIP
+    let encoding: String =
+        tools::get_hash_map_one_value(&response_header_clone, &CONTENT_ENCODING.to_lowercase());
+    if (encoding.contains(GZIP)) {
+        is_need_open_gzip = false;
+    }
+
+    // 不需要gzip去除响应头CONTENT_ENCODING
+    if !is_need_open_gzip {
+        header.remove(&CONTENT_ENCODING.to_lowercase());
+    }
+    let response_header_str: String = tools::hash_map_to_string(&header, RESPONSE_HEADER_BR);
+
     let mut res_content: Vec<u8> = response_content.to_vec();
     if is_need_open_gzip {
         res_content = gzip::encoder(&response_content);
     }
-    let res_response_str: String = format!(
+    // 最终结果字符串
+    let res_response_header_str: String = format!(
         "{}{}{}: {}{}{}{}{}",
         get_http_response_protocol_head(code),
         RESPONSE_HEADER_BR,
@@ -188,13 +211,13 @@ pub fn edit_response(
         RESPONSE_HEADER_BR,
         RESPONSE_HEADER_BR,
     );
-    res_response = res_response_str.clone().into_bytes();
+    res_response = res_response_header_str.clone().into_bytes();
     res_response.extend(res_content);
     print::println(
         &format!(
             "{}:\n{}\n{}",
             REQUEST_RESPONSE_INFO,
-            res_response_str,
+            res_response_header_str,
             tools::vec_u8_to_string(response_content)
         ),
         BLUE,
