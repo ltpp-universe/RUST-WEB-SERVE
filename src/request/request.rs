@@ -75,13 +75,17 @@ impl Request {
                 }
                 let host: String = format!("{}:{}", one_config.listen_ip, port);
                 let listener: net::TcpListener = net::TcpListener::bind(host).unwrap();
+                // 超时设置
+                let _ = listener.set_ttl(one_server_value.proxy_timeout_seconds as u32);
                 let listener_arc: Arc<Mutex<net::TcpListener>> = Arc::new(Mutex::new(listener));
                 port_map_listener.insert(port, Arc::clone(&listener_arc));
+
                 print::println(
                     &format!("{} => {}:{}", LISTENING, one_config.listen_ip, port),
                     YELLOW,
                     &one_server_value,
                 );
+
                 for one_bind_server in config.server.clone() {
                     for (one_bind_server_key, _one_bind_server_value) in
                         one_bind_server.bind_server_name

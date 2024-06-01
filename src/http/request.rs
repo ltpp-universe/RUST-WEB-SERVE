@@ -1,6 +1,11 @@
 use crate::config::config::Server;
-use crate::global::global::{DEFAULT_METHOD, HOST, INVALID_HOST, INVALID_URL};
+use crate::global::global::{
+    APPLICATION_JSON, DEFAULT_METHOD, HEADER_BR, HEADER_BR_DOUBLE, HOST, HTTPS_PORT, HTTPS_SCHEME,
+    HTTP_PORT, INVALID_HOST, INVALID_URL, POST, PUT,
+};
 use crate::log::log;
+use crate::utils::tools;
+use percent_encoding::{percent_decode_str, percent_encode, NON_ALPHANUMERIC};
 use std::collections::HashMap;
 use std::{
     fmt,
@@ -19,9 +24,8 @@ pub struct HttpBase {
 pub struct HttpRequest {
     pub path: String,
     pub method: String,
-    pub query: Vec<(String, String)>,
     pub headers: HashMap<String, String>,
-    pub body: HashMap<String, Vec<String>>,
+    pub body: HashMap<String, String>,
 }
 
 impl fmt::Display for HttpRequest {
@@ -32,25 +36,14 @@ impl fmt::Display for HttpRequest {
         }
 
         let mut body_str: String = String::new();
-        for (key, values) in &self.body {
-            for value in values {
-                body_str.push_str(&format!("{} => {}\n", key, value));
-            }
-        }
-
-        let mut query_str: String = String::new();
-        for (key, values) in &self.query {
-            query_str.push_str(&format!("{}:{} ", key, values));
+        for (key, value) in &self.body {
+            body_str.push_str(&format!("{}: {}\n", key, value));
         }
 
         write!(
             f,
-            "method: {}\npath: {}\nquery: {}\nheaders:\n{}\nbody:\n{}",
-            self.method,
-            self.path,
-            query_str.trim_end(),
-            headers_str,
-            body_str
+            "method: {}\npath: {}\nheaders:\n{}\nbody:\n{}",
+            self.method, self.path, headers_str, body_str
         )
     }
 }
@@ -60,42 +53,78 @@ impl HttpRequest {
      * 解析HTTP请求
      */
     pub fn parse_http_request(server: &Server, request_str: &str) -> Option<HttpRequest> {
-        let mut lines: Split<char> = request_str.split('\n');
+        let parts: Vec<&str> = request_str.split(HEADER_BR_DOUBLE).collect();
+        if parts.len() < HEADER_BR.len() {
+            return None;
+        }
+        let header_part: &str = parts[0];
+        let body_part: &str = parts[1];
+        let mut method: String = String::new();
+        let mut path: String = String::new();
+        let mut headers: HashMap<String, String> = HashMap::new();
+        let mut body: HashMap<String, String> = HashMap::new();
+        let mut lines: Split<&str> = header_part.split(HEADER_BR);
         if let Some(request_line) = lines.next() {
             let mut parts: SplitWhitespace = request_line.split_whitespace();
-            let method: String = parts.next()?.to_owned();
+            method = parts.next()?.to_owned();
             let full_path: String = parts.next()?.to_string();
-            let mut headers: HashMap<String, String> = HashMap::new();
-            let mut body: HashMap<String, Vec<String>> = HashMap::new();
-            for line in lines.clone() {
+            headers = HashMap::new();
+
+            // 解析请求头
+            for line in lines {
                 if let Some(pos) = line.find(":") {
                     let key: String = line[..pos].trim().to_owned().to_lowercase();
                     let value: String = line[pos + 1..].trim().to_owned();
                     headers.insert(key.clone(), value.clone());
-                    body.entry(key).or_insert_with(Vec::new).push(value);
                 }
             }
-            let path: String = HttpRequest::get_path_from_request_url(&full_path);
-            let query: Vec<(String, String)> = HttpRequest::get_query_from_request_url(&full_path);
-            let res_request: HttpRequest = HttpRequest {
-                method,
-                path,
-                headers,
-                body,
-                query,
+
+            // 解析路径和查询参数
+            path = HttpRequest::get_path_from_request_url(&full_path);
+
+            // 解析参数
+            body = match method.as_str() {
+                POST => {
+                    let mut tem_query: HashMap<String, String> = HashMap::new();
+                    for param in body_part.split('&') {
+                        if let Some(pos) = param.find('=') {
+                            let key: String = percent_decode_str(&param[..pos])
+                                .decode_utf8_lossy()
+                                .to_string()
+                                .replace("\0", "");
+                            let value: String = percent_decode_str(&param[pos + 1..])
+                                .decode_utf8_lossy()
+                                .to_string()
+                                .replace("\0", "");
+                            if !key.is_empty() {
+                                tem_query.insert(key, value);
+                            }
+                        }
+                    }
+                    tem_query
+                }
+                _ => HttpRequest::get_query_from_request_url(&full_path),
             };
-            log::write_no_print(server, &res_request);
-            Some(res_request)
-        } else {
-            None
         }
+
+        // 构造HttpRequest结构体
+        let res_request: HttpRequest = HttpRequest {
+            method,
+            path,
+            headers,
+            body,
+        };
+
+        // 记录日志
+        log::write_no_print(server, &res_request);
+        Some(res_request)
     }
 
     /**
      * 获取GET参数
      */
-    pub fn get_query_from_request_url(url: &str) -> Vec<(String, String)> {
-        let mut query_params: Vec<(String, String)> = vec![];
+    pub fn get_query_from_request_url(url: &str) -> HashMap<String, String> {
+        let mut query_params: HashMap<String, String> = HashMap::new();
         if let Some(query_start) = url.find('?') {
             // 找到第一个 '#' 或者直到字符串结尾
             let query_end: usize = url.find('#').unwrap_or(url.len());
@@ -103,11 +132,32 @@ impl HttpRequest {
             for pair in query_str.split('&') {
                 let mut parts: Split<char> = pair.split('=');
                 if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
-                    query_params.push((key.to_owned(), value.to_owned()));
+                    query_params.insert(key.to_string(), value.to_string());
                 }
             }
         }
         query_params
+    }
+
+    /**
+     * 生成查询字符串
+     */
+    pub fn generate_query_string(data: &HashMap<String, String>) -> String {
+        if data.is_empty() {
+            return String::new();
+        }
+        let query_pairs: Vec<String> = data
+            .iter()
+            .map(|(key, value)| {
+                // 编码
+                let encoded_key: percent_encoding::PercentEncode =
+                    percent_encode(&key.as_bytes(), NON_ALPHANUMERIC);
+                let encoded_value: percent_encoding::PercentEncode =
+                    percent_encode(&value.as_bytes(), NON_ALPHANUMERIC);
+                format!("{}={}", encoded_key, encoded_value)
+            })
+            .collect();
+        query_pairs.join("&")
     }
 
     /**
@@ -219,11 +269,97 @@ impl HttpRequest {
      */
     pub fn get_url_without_path_query_hash(url: &str) -> String {
         let http_base: HttpBase = HttpRequest::get_http_base(url);
-        // 拼接成不含查询参数和哈希的 URL
         format!(
             "{}://{}{}",
             http_base.scheme, http_base.host, http_base.port
         )
+    }
+
+    /**
+     * 获取请求协议
+     */
+    pub fn get_scheme(url: &str) -> String {
+        let http_base: HttpBase = HttpRequest::get_http_base(url);
+        http_base.scheme
+    }
+
+    /**
+     * 获取请求IP/域名
+     */
+    pub fn get_ip_domain(url: &str) -> String {
+        let http_base: HttpBase = HttpRequest::get_http_base(url);
+        http_base.host
+    }
+
+    /**
+     * 获取请求端口
+     */
+    pub fn get_port(url: &str) -> u16 {
+        let http_base: HttpBase = HttpRequest::get_http_base(url);
+        let port: &str = tools::remove_str_first_char(&http_base.port);
+        if port == 0.to_string() {
+            let scheme: &str = &HttpRequest::get_scheme(url);
+            match scheme {
+                HTTPS_SCHEME => HTTPS_PORT,
+                _ => HTTP_PORT,
+            };
+        }
+        tools::str_to_number(&port)
+    }
+
+    /**
+     * 获取请求IP/域名和端口
+     */
+    pub fn get_ip_domain_port(url: &str) -> String {
+        format!(
+            "{}:{}",
+            HttpRequest::get_ip_domain(url),
+            HttpRequest::get_port(url)
+        )
+    }
+
+    /**
+     * 获取请求头HTTP首部
+     */
+    pub fn get_http_request_protocol_head(url: &str, method: &str) -> String {
+        format!("{} {} HTTP/1.1{}", method, url, HEADER_BR)
+    }
+
+    /**
+     * 生成http请求数据部分
+     */
+    pub fn generate_http_data(
+        method: &str,
+        content_type: &str,
+        body: &HashMap<String, String>,
+    ) -> String {
+        let mut http_data: String = String::new();
+        if method == POST || method == PUT {
+            if content_type == APPLICATION_JSON {
+                if !body.is_empty() {
+                    let json_body: String = serde_json::to_string(body).unwrap();
+                    http_data.push_str(&json_body);
+                }
+            } else {
+                let mut url_encoded_body: String = String::new();
+                for (key, value) in body.iter() {
+                    url_encoded_body.push_str(&format!("{}={}&", key, value));
+                }
+                // 移除末尾的多余的 & 符号
+                url_encoded_body.pop();
+                http_data.push_str(&url_encoded_body);
+            }
+        } else {
+            let mut url_encoded_body: String = String::new();
+            for (key, value) in body.iter() {
+                url_encoded_body.push_str(&format!("{}={}&", key, value));
+            }
+            // 移除末尾的多余的 & 符号
+            url_encoded_body.pop();
+            http_data.push_str(&url_encoded_body);
+        }
+
+        http_data
     }
 
     /**
@@ -247,33 +383,27 @@ impl HttpRequest {
      * 获取请求
      */
     pub fn process_request(res: Option<HttpRequest>) -> HttpRequest {
-        if let Some(mut http_request) = res {
+        if let Some(http_request) = res {
             let request_path = http_request.path.clone();
             // 检查是否有 Host 头
             match http_request.headers.get(&HOST.to_lowercase()) {
-                Some(http_host) => {
+                Some(_http_host) => {
                     // 返回 http_request
                     http_request
                 }
-                None => {
-                    // 如果没有 Host 头，返回一个新创建的 HttpRequest
-                    HttpRequest {
-                        method: DEFAULT_METHOD.to_owned(),
-                        body: HashMap::new(), // 假设 body 是空的
-                        path: request_path,
-                        headers: HashMap::new(), // 假设 headers 是空的
-                        query: vec![],
-                    }
-                }
+                None => HttpRequest {
+                    method: DEFAULT_METHOD.to_owned(),
+                    body: HashMap::new(),
+                    path: request_path,
+                    headers: HashMap::new(),
+                },
             }
         } else {
-            // 如果 res 是 None，返回一个默认的 HttpRequest
             HttpRequest {
                 method: DEFAULT_METHOD.to_owned(),
                 body: HashMap::new(),
                 path: String::new(),
                 headers: HashMap::new(),
-                query: vec![],
             }
         }
     }

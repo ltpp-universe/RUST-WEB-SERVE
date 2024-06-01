@@ -8,10 +8,18 @@ pub const DEFAULT_PORT: &'static str = "80";
 pub const DEFAULT_PATH: &'static str = "/";
 pub const DEFAULT_METHOD: &'static str = "GET";
 pub const DANGER_PATH: &'static str = "../";
+pub const HTTP_SCHEME: &'static str = "http";
+pub const HTTPS_SCHEME: &'static str = "https";
+pub const HTTP_PORT: &'static usize = &80;
+pub const HTTPS_PORT: &'static usize = &443;
+// 类型
+pub trait ReadWrite: std::io::Read + std::io::Write {}
+impl<T: std::io::Read + std::io::Write> ReadWrite for T {}
 // 数据
 pub const NOT_PROXY: &'static i32 = &-1;
-pub const RESPONSE_HEADER_BR: &'static str = &"\r\n";
-pub const HOTLINK_PROTECTION_MATCH_MSG: &'static str = &"Matched to hotlink protection";
+pub const HEADER_BR: &'static str = "\r\n";
+pub const HEADER_BR_DOUBLE: &'static str = "\r\n\r\n";
+pub const HOTLINK_PROTECTION_MATCH_MSG: &'static str = "Matched to hotlink protection";
 pub const USER_AGENT: &'static str = "user-agent";
 pub const ACCEPT: &'static str = "accept";
 pub const CONTENT_TYPE: &'static str = "content-type";
@@ -21,35 +29,40 @@ pub const ACCEPT_ENCODING: &'static str = "accept-encoding";
 pub const ACCEPT_LANGUAGE: &'static str = "accept-language";
 pub const CONTENT_ENCODING: &'static str = "content-encoding";
 pub const HOST: &'static str = "host";
-pub const GET: &'static str = &"GET";
-pub const POST: &'static str = &"POST";
-pub const PUT: &'static str = &"PUT";
-pub const DELETE: &'static str = &"DELETE";
+pub const GET: &'static str = "GET";
+pub const POST: &'static str = "POST";
+pub const PUT: &'static str = "PUT";
+pub const DELETE: &'static str = "DELETE";
 pub const REFERER: &'static str = "referer";
+pub const ORIGIN: &'static str = "origin";
 pub const COOKIE: &'static str = "cookie";
 pub const GZIP: &'static str = "gzip";
 pub const BINDING: &'static str = "Binding";
 pub const LISTENING: &'static str = "Listening";
 pub const TEXT_HTML: &'static str = "text/html";
-pub const HTTP_HTTPS_REGEX: &'static str = r"^https?://[^\s/$.?#].[^\s]*$";
-
+pub const HTTP_HTTPS_REGEX: &'static str = &r"^https?://[^\s/$.?#].[^\s]*$";
+pub const KEEP_ALIVE: &'static str = "keep-alive";
+pub const CLOSE: &'static str = "close";
+pub const APPLICATION_X_WWW_FORM_URLENCODED: &'static str = "application/x-www-form-urlencoded";
+pub const APPLICATION_JSON: &'static str = "application/json";
 // 配置
-pub const DEFAULT_LISTEN_IP: &'static str = &"0.0.0.0";
-pub const LOCAL_LISTEN_IP: &'static str = &"127.0.0.1";
-pub const LOCALHOST_LISTEN_IP: &'static str = &"localhost";
+pub const DEFAULT_LISTEN_IP: &'static str = "0.0.0.0";
+pub const LOCAL_LISTEN_IP: &'static str = "127.0.0.1";
+pub const LOCALHOST_LISTEN_IP: &'static str = "localhost";
 pub const DEFAULT_LISTEN_PORT: &'static usize = &80;
 pub const DEFAULT_BUFFER_SIZE: &'static usize = &10240;
 pub const DEFAULT_GZIP_LEVEL: &'static usize = &5;
-pub const DEFAULT_ROOT_PATH: &'static str = &"./";
-pub const DEFAULT_LOG_DIR_PATH: &'static str = &"./logs";
+pub const DEFAULT_ROOT_PATH: &'static str = "./";
+pub const DEFAULT_LOG_DIR_PATH: &'static str = "./logs";
 pub const DEFAULT_SERVER_NAME: &'static str = DEFAULT_LISTEN_IP;
-pub const DEFAULT_EMPTY_PATH_TRY_FILES_PATH: &'static str = &"./index.html";
-pub const DEFAULT_RESPONSE_HEADER: &'static str = &"Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Credentials: true\r\nConnection: keep-alive\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nServer: RUST-WEB-SERVER";
-pub const DEFAULT_PROXY: &'static str = &"";
+pub const DEFAULT_EMPTY_PATH_TRY_FILES_PATH: &'static str = "./index.html";
+pub const DEFAULT_RESPONSE_HEADER: &'static str = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Credentials: true\r\nConnection: keep-alive\r\nContent-Type: text/html\r\nContent-Encoding: gzip\r\nServer: RUST-WEB-SERVER";
+pub const DEFAULT_PROXY: &'static str = "";
 pub const PROXY_TIMEOUT_SECONDS: &'static usize = &10;
-pub const DEFAULT_HOTLINK_PROTECTION: &'static str = &"";
+pub const DEFAULT_HOTLINK_PROTECTION: &'static str = "";
 // 日志
 pub const PROXY_URL_INFO: &'static str = "Proxy url info";
+pub const PROXY_REQUEST_INFO: &'static str = "Proxy request info";
 pub const REQUEST_RESPONSE_INFO: &'static str = "Request response info";
 pub const REQUEST_QUERY_INFO: &'static str = "Request query info";
 // 成功

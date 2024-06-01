@@ -1,11 +1,11 @@
 use crate::config::config::{Config, Server};
 use crate::global::global::{
     ACCEPTED_TEXT, BAD_GATEWAY_TEXT, BAD_REQUEST_TEXT, CONTENT_ENCODING, CONTENT_LENGTH,
-    CONTENT_TYPE, CONTINUE_TEXT, CREATED_TEXT, FORBIDDEN_TEXT, FOUND_TEXT, GZIP,
-    INTERNAL_SERVER_ERROR_TEXT, METHOD_NOT_ALLOWED_TEXT, MOVED_PERMANENTLY_TEXT, NOT_FOUND_TEXT,
-    NOT_IMPLEMENTED_TEXT, NOT_MODIFIED_TEXT, NOT_PROXY, NO_CONTENT_TEXT, OK_TEXT, PROXY_FAILED,
-    REQUEST_RESPONSE_INFO, REQUEST_TIMEOUT_TEXT, RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS,
-    RESPONSE_HEADER_BR, SERVICE_UNAVAILABLE_TEXT, SWITCHING_PROTOCOLS_TEXT, UNAUTHORIZED_TEXT,
+    CONTENT_TYPE, CONTINUE_TEXT, CREATED_TEXT, FORBIDDEN_TEXT, FOUND_TEXT, GZIP, HEADER_BR,
+    HEADER_BR_DOUBLE, INTERNAL_SERVER_ERROR_TEXT, METHOD_NOT_ALLOWED_TEXT, MOVED_PERMANENTLY_TEXT,
+    NOT_FOUND_TEXT, NOT_IMPLEMENTED_TEXT, NOT_MODIFIED_TEXT, NOT_PROXY, NO_CONTENT_TEXT, OK_TEXT,
+    PROXY_FAILED, REQUEST_RESPONSE_INFO, REQUEST_TIMEOUT_TEXT, RESOURCE_LOAD_FAIL,
+    RESOURCE_LOAD_SUCCESS, SERVICE_UNAVAILABLE_TEXT, SWITCHING_PROTOCOLS_TEXT, UNAUTHORIZED_TEXT,
     UNKNOWN_STATUS_CODE,
 };
 use crate::gzip::gzip;
@@ -149,8 +149,15 @@ pub fn get_res_response(
 /**
  * 获取响应头HTTP首部
  */
-fn get_http_response_protocol_head(code: usize) -> String {
+pub fn get_http_response_protocol_head(code: usize) -> String {
     format!("HTTP/1.1 {} {}", code, get_code_msg(code))
+}
+
+/**
+ * 判断读取完成
+ */
+pub fn judge_data_read_end(now: &String) -> bool {
+    now == HEADER_BR_DOUBLE || now.len() == 0
 }
 
 /**
@@ -183,12 +190,13 @@ pub fn edit_response(
     // 如果代理服务器开启了GZIP，此服务器不在GZIP，代理后端响应头透传GZIP响应头，防止二次GZIP
     let encoding: String =
         tools::get_hash_map_one_value(&response_header_clone, &CONTENT_ENCODING.to_lowercase());
-    if (encoding.contains(GZIP)) {
+    let request_server_open_encoding: bool = encoding.contains(GZIP);
+    if request_server_open_encoding {
         is_need_open_gzip = false;
     }
 
-    // 资源不需要gzip去除响应头CONTENT_ENCODING
-    if !is_need_open_gzip {
+    // 资源不需要gzip且代理服务器无gzip去除响应头CONTENT_ENCODING
+    if !is_need_open_gzip && !request_server_open_encoding {
         header.remove(&CONTENT_ENCODING.to_lowercase());
     }
 
@@ -198,27 +206,30 @@ pub fn edit_response(
         header.insert(CONTENT_TYPE.to_owned(), file::get_content_type(file_path));
     }
 
-    let response_header_str: String = tools::hash_map_to_string(&header, RESPONSE_HEADER_BR);
-
     let mut res_content: Vec<u8> = response_content.to_vec();
     if is_need_open_gzip {
         res_content = gzip::encoder(&response_content, server.gzip_level as u32);
+        header.insert(CONTENT_ENCODING.to_lowercase(), GZIP.to_string());
     }
+
+    let response_header_str: String = tools::hash_map_to_string(&header, HEADER_BR);
 
     // 最终结果字符串
     let res_response_header_str: String = format!(
-        "{}{}{}: {}{}{}{}{}",
+        "{}{}{}: {}{}{}{}",
         get_http_response_protocol_head(code),
-        RESPONSE_HEADER_BR,
+        HEADER_BR,
         CONTENT_LENGTH.to_lowercase(),
         res_content.len(),
-        RESPONSE_HEADER_BR,
+        HEADER_BR,
         response_header_str,
-        RESPONSE_HEADER_BR,
-        RESPONSE_HEADER_BR,
+        HEADER_BR_DOUBLE,
     );
+
     let mut res_response: Vec<u8> = res_response_header_str.clone().into_bytes();
+
     res_response.extend(res_content);
+
     if !is_local_file_request {
         print::println(
             &format!(
@@ -231,6 +242,5 @@ pub fn edit_response(
             server,
         );
     }
-
     res_response
 }

@@ -68,7 +68,7 @@ impl fmt::Display for Config {
         for server in &self.server {
             servers_str.push_str(&format!("{}\n", server));
         }
-        write!(f, "Servers:\n{}", servers_str)
+        write!(f, "{}", servers_str)
     }
 }
 
