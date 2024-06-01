@@ -167,19 +167,18 @@ fn convert_headers_to_hashmap(server: &Server, headers: &HeaderMap) -> HashMap<S
 pub fn send_sync_request(
     server: &Server,
     request: &HttpRequest,
-    proxy_index: usize,
+    proxy_url: &str,
 ) -> Result<(HashMap<String, String>, Vec<u8>), Box<dyn Error>> {
     let mut request_header: HashMap<String, String> = request.headers.clone();
     let method: String = request.method.clone();
     let url: String = format!(
         "{}{}",
-        HttpRequest::get_url_without_path_query_hash(&server.proxy[proxy_index]),
+        HttpRequest::get_url_without_path_query_hash(proxy_url),
         request.path
     );
 
     // 查询信息
-    let mut body: HashMap<String, String> =
-        HttpRequest::get_query_from_request_url(&server.proxy[proxy_index]);
+    let mut body: HashMap<String, String> = HttpRequest::get_query_from_request_url(proxy_url);
     // 请求查询信息
     let request_query: HashMap<String, String> = request.body.clone();
     // 整合信息

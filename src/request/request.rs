@@ -147,7 +147,7 @@ impl Request {
     /**
      * 获取资源完整路径
      */
-    fn get_full_file_path(server: &Server, request_path: &String) -> String {
+    fn get_full_file_path(server: &Server, request_path: &str) -> String {
         let mut tem_request_path: String = String::from(request_path);
         let mut root_path: String = server.root_path.clone();
         if let Some(unix_path_str) = path::PathBuf::from(&root_path).to_str() {
@@ -171,10 +171,10 @@ impl Request {
     /**
      * 判断是否需要代理
      */
-    pub fn judge_need_proxy(server: &Server) -> i32 {
+    pub fn judge_need_proxy(server: &Server) -> String {
         let proxy_len: usize = server.proxy.len();
         if proxy_len == 0 {
-            return *NOT_PROXY;
+            return NOT_PROXY.to_string();
         }
         let mut safe_proxy_list: Vec<String> = vec![];
         let https_regex: Regex = Regex::new(HTTP_HTTPS_REGEX).unwrap();
@@ -185,11 +185,11 @@ impl Request {
         }
         let safe_proxy_len: usize = safe_proxy_list.len();
         if safe_proxy_len == 0 {
-            return *NOT_PROXY;
+            return NOT_PROXY.to_string();
         }
         let mut rng: rand::prelude::ThreadRng = rand::thread_rng();
-        let random_index: i32 = rng.gen_range(0..safe_proxy_len) as i32;
-        return random_index;
+        let random_index: usize = rng.gen_range(0..safe_proxy_len);
+        safe_proxy_list[random_index].clone()
     }
 
     /**

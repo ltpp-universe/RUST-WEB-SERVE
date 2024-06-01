@@ -16,7 +16,7 @@ pub const HTTPS_PORT: &'static usize = &443;
 pub trait ReadWrite: std::io::Read + std::io::Write {}
 impl<T: std::io::Read + std::io::Write> ReadWrite for T {}
 // 数据
-pub const NOT_PROXY: &'static i32 = &-1;
+pub const NOT_PROXY: &'static str = "";
 pub const HEADER_BR: &'static str = "\r\n";
 pub const HEADER_BR_DOUBLE: &'static str = "\r\n\r\n";
 pub const HOTLINK_PROTECTION_MATCH_MSG: &'static str = "Matched to hotlink protection";

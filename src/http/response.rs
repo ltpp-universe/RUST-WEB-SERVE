@@ -90,8 +90,8 @@ pub fn get_res_response(
     let mut load_success: bool = false;
     let mut res_response: Vec<u8> = vec![];
     if is_safe_request {
-        let proxy_index: i32 = Request::judge_need_proxy(server);
-        if proxy_index == *NOT_PROXY {
+        let proxy_url: String = Request::judge_need_proxy(server);
+        if proxy_url == *NOT_PROXY {
             if let Some(html_res) = file::get_file_data(server, &file_path) {
                 load_success = true;
                 response_content = html_res;
@@ -102,7 +102,7 @@ pub fn get_res_response(
                 );
             }
         } else {
-            match proxy::proxy::send_sync_request(&server, &http_request, proxy_index as usize) {
+            match proxy::proxy::send_sync_request(&server, &http_request, &proxy_url) {
                 Ok((header, body)) => {
                     response_header = header;
                     response_content = body;
@@ -156,7 +156,7 @@ pub fn get_http_response_protocol_head(code: usize) -> String {
 /**
  * 判断读取完成
  */
-pub fn judge_data_read_end(now: &String) -> bool {
+pub fn judge_data_read_end(now: &str) -> bool {
     now == HEADER_BR_DOUBLE || now.len() == 0
 }
 
