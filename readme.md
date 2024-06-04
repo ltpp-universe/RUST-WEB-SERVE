@@ -2,4 +2,4 @@
 
 [LTPP-GIT 文档地址](https://root.pages.ltpp.vip/ltpp-docs/LTPP-RUST-WEB-SERVE/)
 
-[Github 地址文档地址备用](https://ltpp-system.github.io/ltpp-docs/LTPP-RUST-WEB-SERVE/)
+[Github 地址文档地址备用](https://ltpp-universe.github.io/ltpp-docs/LTPP-RUST-WEB-SERVE/)
