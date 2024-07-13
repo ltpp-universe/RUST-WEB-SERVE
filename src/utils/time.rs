@@ -1,4 +1,3 @@
-include!("../global/mod.rs");
 use chrono::prelude::*;
 
 pub fn format_now_time() -> String {
