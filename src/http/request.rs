@@ -337,19 +337,11 @@ impl HttpRequest {
         if method == POST || method == PUT {
             if content_type == APPLICATION_JSON {
                 if !body.is_empty() {
-                    let json_body: String = serde_json::to_string(body).unwrap();
+                    let json_body: String = serde_json::to_string(body).unwrap_or(String::new());
                     http_data.push_str(&json_body);
                 }
-            } else {
-                let mut url_encoded_body: String = String::new();
-                for (key, value) in body.iter() {
-                    url_encoded_body.push_str(&format!("{}={}&", key, value));
-                }
-                // 移除末尾的多余的 & 符号
-                url_encoded_body.pop();
-                http_data.push_str(&url_encoded_body);
+                return http_data;
             }
-        } else {
             let mut url_encoded_body: String = String::new();
             for (key, value) in body.iter() {
                 url_encoded_body.push_str(&format!("{}={}&", key, value));
@@ -357,7 +349,15 @@ impl HttpRequest {
             // 移除末尾的多余的 & 符号
             url_encoded_body.pop();
             http_data.push_str(&url_encoded_body);
+            return http_data;
         }
+        let mut url_encoded_body: String = String::new();
+        for (key, value) in body.iter() {
+            url_encoded_body.push_str(&format!("{}={}&", key, value));
+        }
+        // 移除末尾的多余的 & 符号
+        url_encoded_body.pop();
+        http_data.push_str(&url_encoded_body);
 
         http_data
     }
@@ -384,7 +384,7 @@ impl HttpRequest {
      */
     pub fn process_request(res: Option<HttpRequest>) -> HttpRequest {
         if let Some(http_request) = res {
-            let request_path = http_request.path.clone();
+            let request_path: String = http_request.path.clone();
             // 检查是否有 Host 头
             match http_request.headers.get(&HOST.to_lowercase()) {
                 Some(_http_host) => {

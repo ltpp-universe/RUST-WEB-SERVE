@@ -136,7 +136,7 @@ impl Config {
         if !File::open(CONFIG_PATH).is_ok() {
             let _ = Config::creat_config();
         }
-        let json_str: String = fs::read_to_string(CONFIG_PATH).unwrap();
+        let json_str: String = fs::read_to_string(CONFIG_PATH).unwrap_or(String::new());
         let config: Config = serde_json::from_str(&json_str).expect(JSON_DECODE_FAIL);
         for one_config in &config.server {
             for (_one_server_key, one_server_value) in &one_config.bind_server_name {

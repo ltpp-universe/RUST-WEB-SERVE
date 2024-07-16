@@ -78,6 +78,7 @@ pub const GET_TIME_FAIL: &'static str = "Time went backwards";
 pub const GET_MONTH_FAIL: &'static str = "Invalid month";
 pub const GET_CONFIG_FAIL: &'static str = "Failed to get config";
 pub const RESOURCE_LOAD_FAIL: &'static str = "Resource load fail";
+pub const REFUSE_LOAD_FILE: &'static str = "Refuse load file";
 pub const OPEN_LOG_FILE_FAILED: &'static str = "Failed to open log file";
 pub const WRITE_LOG_FILE_FAILED: &'static str = "Failed to write to log file";
 pub const PROXY_FAILED: &'static str = "Failed to proxy";
