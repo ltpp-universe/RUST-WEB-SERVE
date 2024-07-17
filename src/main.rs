@@ -1,4 +1,3 @@
-#![allow(warnings)]
 mod config;
 mod file_safe;
 mod global;

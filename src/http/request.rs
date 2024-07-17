@@ -1,10 +1,9 @@
 use crate::config::config::Server;
 use crate::global::global::{
-    APPLICATION_JSON, DEFAULT_METHOD, HEADER_BR, HEADER_BR_DOUBLE, HOST, HTTPS_PORT, HTTPS_SCHEME,
-    HTTP_PORT, INVALID_HOST, INVALID_URL, POST, PUT,
+    APPLICATION_JSON, DEFAULT_METHOD, HEADER_BR, HEADER_BR_DOUBLE, HOST, INVALID_HOST, INVALID_URL,
+    POST, PUT,
 };
 use crate::log::log;
-use crate::utils::tools;
 use percent_encoding::{percent_decode_str, percent_encode, NON_ALPHANUMERIC};
 use std::collections::HashMap;
 use std::{
@@ -161,72 +160,6 @@ impl HttpRequest {
     }
 
     /**
-     * 获取域名和端口
-     */
-    pub fn get_domain_port(url: &str) -> String {
-        let find_str: &str = "://";
-        if let Some(pos_scheme_end) = url.find(find_str) {
-            let pos_domain_start: usize = pos_scheme_end + find_str.len();
-            let domain_start: &str = &url[pos_domain_start..];
-            let pos_path_start: Option<usize> = domain_start
-                .find('/')
-                .map(|pos: usize| pos_domain_start + pos);
-            let pos_query_start: Option<usize> = domain_start
-                .find('?')
-                .map(|pos: usize| pos_domain_start + pos);
-            let pos_hash_start: Option<usize> = domain_start
-                .find('#')
-                .map(|pos: usize| pos_domain_start + pos);
-            let url_len: usize = url.len();
-            let pos_domain_arr: [Option<usize>; 4] = [
-                pos_path_start,
-                pos_query_start,
-                pos_hash_start,
-                Some(url_len),
-            ];
-            let pos_domain_end: &usize = pos_domain_arr.iter().flatten().min().unwrap_or(&url_len);
-            let domain: &str = &url[pos_domain_start..*pos_domain_end];
-            domain.to_owned()
-        } else {
-            String::new()
-        }
-    }
-
-    /**
-     * 获取路径
-     */
-    pub fn get_path(url: &str) -> String {
-        let find_str: &str = "://";
-        if let Some(pos_scheme_end) = url.find(find_str) {
-            let pos_domain_start: usize = pos_scheme_end + find_str.len();
-            let domain_start: &str = &url[pos_domain_start..];
-            let pos_path_start: Option<usize> = domain_start
-                .find('/')
-                .map(|pos: usize| pos_domain_start + pos);
-            let pos_query_start: Option<usize> = domain_start
-                .find('?')
-                .map(|pos: usize| pos_domain_start + pos);
-            let pos_hash_start: Option<usize> = domain_start
-                .find('#')
-                .map(|pos: usize| pos_domain_start + pos);
-            let url_len: usize = url.len();
-            let pos_path_arr: [Option<usize>; 3] = [pos_query_start, pos_hash_start, Some(url_len)];
-            let pos_path_end: &usize = pos_path_arr.iter().flatten().min().unwrap_or(&url_len);
-            let pos_domain_arr: [Option<usize>; 4] = [
-                pos_path_start,
-                pos_query_start,
-                pos_hash_start,
-                Some(url_len),
-            ];
-            let pos_domain_end: &usize = pos_domain_arr.iter().flatten().min().unwrap_or(&url_len);
-            let path: &str = &url[*pos_domain_end..*pos_path_end];
-            path.to_owned()
-        } else {
-            String::new()
-        }
-    }
-
-    /**
      * 获取http_base
      */
     pub fn get_http_base(url: &str) -> HttpBase {
@@ -289,33 +222,6 @@ impl HttpRequest {
     pub fn get_ip_domain(url: &str) -> String {
         let http_base: HttpBase = HttpRequest::get_http_base(url);
         http_base.host
-    }
-
-    /**
-     * 获取请求端口
-     */
-    pub fn get_port(url: &str) -> u16 {
-        let http_base: HttpBase = HttpRequest::get_http_base(url);
-        let port: &str = tools::remove_str_first_char(&http_base.port);
-        if port == 0.to_string() {
-            let scheme: &str = &HttpRequest::get_scheme(url);
-            match scheme {
-                HTTPS_SCHEME => HTTPS_PORT,
-                _ => HTTP_PORT,
-            };
-        }
-        tools::str_to_number(&port)
-    }
-
-    /**
-     * 获取请求IP/域名和端口
-     */
-    pub fn get_ip_domain_port(url: &str) -> String {
-        format!(
-            "{}:{}",
-            HttpRequest::get_ip_domain(url),
-            HttpRequest::get_port(url)
-        )
     }
 
     /**

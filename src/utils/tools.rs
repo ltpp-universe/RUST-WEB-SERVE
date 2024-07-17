@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::default::Default;
 use std::hash::Hash;
-use std::str::FromStr;
 
 /**
  * HashMap<String,String>转String
@@ -61,25 +60,4 @@ where
         Some(value) => value.clone(),
         None => TVALUE::default(),
     }
-}
-/**
- * 字符串转数字
- */
-pub fn str_to_number<T>(str: &str) -> T
-where
-    T: FromStr + Default,
-{
-    match str.parse::<T>() {
-        Ok(number) => number,
-        _ => T::default(),
-    }
-}
-
-/**
- * 去除字符串首字母
- */
-pub fn remove_str_first_char(input: &str) -> &str {
-    let mut chars: std::str::Chars = input.chars();
-    chars.next();
-    chars.as_str()
 }

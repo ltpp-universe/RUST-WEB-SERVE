@@ -2,14 +2,14 @@ use crate::config::config::Server;
 use crate::file_safe::file_safe;
 use crate::global::global::{
     ReadWrite, APPLICATION_X_WWW_FORM_URLENCODED, CLOSE, CONNECTION, CONTENT_LENGTH, CONTENT_TYPE,
-    DEFAULT_HTTP_PORT, HEADER_BR, HEADER_BR_DOUBLE, HOST, HTTPS_SCHEME, ORIGIN,
-    PARSE_RESPONSE_HEADER_FAILED, POST, PROXY_FAILED, PROXY_REQUEST_INFO, PROXY_URL_INFO, REFERER,
+    DEFAULT_HTTP_PORT, HEADER_BR, HEADER_BR_DOUBLE, HOST, HTTPS_SCHEME, ORIGIN, POST, PROXY_FAILED,
+    PROXY_REQUEST_INFO, PROXY_URL_INFO, REFERER,
 };
 use crate::http::request::HttpRequest;
 use crate::http::response;
 use crate::print::print::{self, RED, YELLOW};
 use crate::utils::tools;
-use http::{HeaderMap, Uri};
+use http::Uri;
 use native_tls::TlsConnector;
 use std::collections::HashMap;
 use std::error::Error;
@@ -52,14 +52,14 @@ fn send_request(
     let mut stream: Box<dyn ReadWrite> = if scheme == HTTPS_SCHEME {
         // 加密连接
         let tls_connector: TlsConnector = TlsConnector::builder().build()?;
-        let tcp_stream: TcpStream = TcpStream::connect((host.clone(), port))?;
+        let tcp_stream: TcpStream = TcpStream::connect((host, port))?;
         tcp_stream.set_read_timeout(Some(Duration::from_secs(
             server.proxy_timeout_seconds as u64,
         )))?;
         Box::new(tls_connector.connect(&host, tcp_stream)?)
     } else {
         // 普通连接
-        let tcp_stream: TcpStream = TcpStream::connect((host.clone(), port))?;
+        let tcp_stream: TcpStream = TcpStream::connect((host, port))?;
         tcp_stream.set_read_timeout(Some(Duration::from_secs(
             server.proxy_timeout_seconds as u64,
         )))?;
@@ -136,29 +136,6 @@ fn send_request(
     }
 
     Ok((headers_map, response_body))
-}
-
-/**
- * 响应头转HashMap
- */
-fn convert_headers_to_hashmap(server: &Server, headers: &HeaderMap) -> HashMap<String, String> {
-    let mut hashmap: HashMap<String, String> = HashMap::new();
-    for (key, value) in headers.iter() {
-        match value.to_str() {
-            Ok(tem_value) => {
-                hashmap.insert(key.to_string(), tem_value.to_string());
-            }
-            Err(err) => {
-                print::println(
-                    &format!("{} => {:?}", PARSE_RESPONSE_HEADER_FAILED, err),
-                    RED,
-                    server,
-                );
-            }
-        }
-    }
-
-    hashmap
 }
 
 /**
