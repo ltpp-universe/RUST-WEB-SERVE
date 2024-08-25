@@ -44,12 +44,7 @@ pub const DEFAULT_RESPONSE_HEADER: &'static str = "Access-Control-Allow-Origin: 
 pub const DEFAULT_PROXY: &'static str = "";
 pub const PROXY_TIMEOUT_SECONDS: &'static usize = &10;
 pub const DEFAULT_HOTLINK_PROTECTION: &'static str = "";
-// 日志
-pub const PROXY_URL_INFO: &'static str = "Proxy url info";
-pub const PROXY_REQUEST_INFO: &'static str = "Proxy request info";
-pub const REQUEST_RESPONSE_INFO: &'static str = "Request response info";
 // 成功
-pub const RESOURCE_LOAD_SUCCESS: &'static str = "Resource load success";
 pub const CONFIG_PATH: &'static str = "config.json";
 // 失败
 pub const INVALID_URL: &'static str = "Invalid URL";

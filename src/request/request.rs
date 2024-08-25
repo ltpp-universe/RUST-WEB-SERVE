@@ -1,8 +1,7 @@
 use crate::config::config::{Config, Server};
 use crate::file_safe::file_safe;
 use crate::global::global::{
-    BINDING, FAILED_TO_LOCK_THE_LISTENER, GET_CONFIG_FAIL, HOST, HTTP_HTTPS_REGEX, LISTENING,
-    NOT_PROXY,
+    FAILED_TO_LOCK_THE_LISTENER, GET_CONFIG_FAIL, HOST, HTTP_HTTPS_REGEX, LISTENING, NOT_PROXY,
 };
 use crate::http::{request::HttpRequest, response};
 use crate::print::print::{self, RED, YELLOW};
@@ -86,17 +85,6 @@ impl Request {
                     &one_server_value,
                 );
 
-                for one_bind_server in config.server.clone() {
-                    for (one_bind_server_key, _one_bind_server_value) in
-                        one_bind_server.bind_server_name
-                    {
-                        print::println(
-                            &format!("{} => {}:{}", BINDING, one_bind_server_key, port),
-                            YELLOW,
-                            &one_server_value,
-                        );
-                    }
-                }
                 let listener_clone: Arc<Mutex<net::TcpListener>> = Arc::clone(&listener_arc);
                 let one_config_clone: Server = one_server_value.clone();
                 let port_map_listener_clone: HashMap<usize, Arc<Mutex<net::TcpListener>>> =

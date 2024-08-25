@@ -4,13 +4,12 @@ use crate::global::global::{
     CONTENT_TYPE, CONTINUE_TEXT, CREATED_TEXT, FORBIDDEN_TEXT, FOUND_TEXT, GZIP, HEADER_BR,
     HEADER_BR_DOUBLE, INTERNAL_SERVER_ERROR_TEXT, METHOD_NOT_ALLOWED_TEXT, MOVED_PERMANENTLY_TEXT,
     NOT_FOUND_TEXT, NOT_IMPLEMENTED_TEXT, NOT_MODIFIED_TEXT, NOT_PROXY, NO_CONTENT_TEXT, OK_TEXT,
-    PROXY_FAILED, REQUEST_RESPONSE_INFO, REQUEST_TIMEOUT_TEXT, RESOURCE_LOAD_FAIL,
-    RESOURCE_LOAD_SUCCESS, SERVICE_UNAVAILABLE_TEXT, SWITCHING_PROTOCOLS_TEXT, UNAUTHORIZED_TEXT,
-    UNKNOWN_STATUS_CODE,
+    PROXY_FAILED, REQUEST_TIMEOUT_TEXT, RESOURCE_LOAD_FAIL, SERVICE_UNAVAILABLE_TEXT,
+    SWITCHING_PROTOCOLS_TEXT, UNAUTHORIZED_TEXT, UNKNOWN_STATUS_CODE,
 };
 use crate::gzip::gzip;
 use crate::http::request::HttpRequest;
-use crate::print::print::{self, BLUE, GREEN, RED};
+use crate::print::print::{self, RED};
 use crate::proxy;
 use crate::request::request::Request;
 use crate::template::template;
@@ -95,11 +94,6 @@ pub fn get_res_response(
             if let Some(html_res) = file::get_file_data(server, &file_path) {
                 load_success = true;
                 response_content = html_res;
-                print::println(
-                    &format!("{} => {}", &RESOURCE_LOAD_SUCCESS, &file_path),
-                    GREEN,
-                    server,
-                );
             }
         } else {
             match proxy::proxy::send_sync_request(&server, &http_request, &proxy_url) {
@@ -230,17 +224,5 @@ pub fn edit_response(
 
     res_response.extend(res_content);
 
-    if !is_local_file_request {
-        print::println(
-            &format!(
-                "{}:\n{}\n{}",
-                REQUEST_RESPONSE_INFO,
-                res_response_header_str,
-                tools::vec_u8_to_string(response_content)
-            ),
-            BLUE,
-            server,
-        );
-    }
     res_response
 }

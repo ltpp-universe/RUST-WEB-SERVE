@@ -39,16 +39,6 @@ pub fn parse_string_array_to_hashmap(arr: &Vec<String>) -> HashMap<String, Strin
 }
 
 /**
- * Vuc<u8>转String
- */
-pub fn vec_u8_to_string(vec: &Vec<u8>) -> String {
-    match String::from_utf8(vec.clone()) {
-        Ok(s) => s,
-        Err(_) => "".to_owned(),
-    }
-}
-
-/**
  * 获取HashMap某个value
  */
 pub fn get_hash_map_one_value<TKEY, TVALUE>(hash_map: &HashMap<TKEY, TVALUE>, key: &TKEY) -> TVALUE

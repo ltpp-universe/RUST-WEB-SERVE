@@ -1,6 +1,6 @@
 use crate::config::config::Server;
-use crate::global::global::{RESOURCE_LOAD_FAIL, RESOURCE_LOAD_SUCCESS, TEXT_HTML};
-use crate::print::print::{self, GREEN, RED};
+use crate::global::global::{RESOURCE_LOAD_FAIL, TEXT_HTML};
+use crate::print::print::{self, RED};
 use mime_guess::from_path;
 use std::path::Path;
 use std::{fs, io};
@@ -49,11 +49,6 @@ pub fn get_file_data(server: &Server, file_path: &str) -> Option<Vec<u8>> {
             _contents_result = fs::read(&file_path);
             match _contents_result {
                 Ok(contents) => {
-                    print::println(
-                        &format!("{} => {}", &RESOURCE_LOAD_SUCCESS, &file_path),
-                        GREEN,
-                        server,
-                    );
                     return Some(contents);
                 }
                 Err(err) => {

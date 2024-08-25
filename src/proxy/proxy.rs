@@ -3,11 +3,11 @@ use crate::file_safe::file_safe;
 use crate::global::global::{
     ReadWrite, APPLICATION_X_WWW_FORM_URLENCODED, CLOSE, CONNECTION, CONTENT_LENGTH, CONTENT_TYPE,
     DEFAULT_HTTP_PORT, HEADER_BR, HEADER_BR_DOUBLE, HOST, HTTPS_SCHEME, ORIGIN, POST, PROXY_FAILED,
-    PROXY_REQUEST_INFO, PROXY_URL_INFO, REFERER,
+    REFERER,
 };
 use crate::http::request::HttpRequest;
 use crate::http::response;
-use crate::print::print::{self, RED, YELLOW};
+use crate::print::print::{self, RED};
 use crate::utils::tools;
 use http::Uri;
 use native_tls::TlsConnector;
@@ -69,12 +69,6 @@ fn send_request(
     let request: String = HttpRequest::get_http_request_protocol_head(&proxy_url, method);
     let body_len: usize = body.len();
 
-    print::println(
-        &format!("{} => {}", PROXY_URL_INFO, proxy_url),
-        YELLOW,
-        server,
-    );
-
     headers.insert(
         ORIGIN.to_lowercase(),
         HttpRequest::get_url_without_query_hash(url),
@@ -103,15 +97,6 @@ fn send_request(
 
     // 请求头结束需要一个空行
     headers_str.push_str(HEADER_BR);
-
-    print::println(
-        &format!(
-            "{}:\n{}{}{}",
-            PROXY_REQUEST_INFO, request, headers_str, body
-        ),
-        YELLOW,
-        server,
-    );
 
     // 请求行
     stream.write_all(request.as_bytes())?;

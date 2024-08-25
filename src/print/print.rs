@@ -6,7 +6,6 @@ use std::{fmt, sync};
 pub const GREEN: &'static str = "\x1B[32m"; // 绿色
 pub const RED: &'static str = "\x1B[31m"; // 红色
 pub const YELLOW: &'static str = "\x1B[33m"; // 黄色
-pub const BLUE: &'static str = "\x1B[34m"; // 蓝色
 const END: &'static str = "\x1B[0m"; // 结束
 const PRINTLN_MUTEX: sync::Mutex<()> = sync::Mutex::new(());
 
