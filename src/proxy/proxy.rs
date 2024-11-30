@@ -13,7 +13,7 @@ use http::Uri;
 use native_tls::TlsConnector;
 use std::collections::HashMap;
 use std::error::Error;
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 use std::time::Duration;
 
